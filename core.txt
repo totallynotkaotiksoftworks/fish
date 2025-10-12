@@ -1,0 +1,147 @@
+-- Core Features for Astralis
+-- Implements Aimbot, Silent Aim, ESP, Chams, RageBot, Crosshair, Third Person, etc.
+
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Lighting = cloneref(game:GetService("Lighting"))
+local localplayer = Players.LocalPlayer
+
+-- Library Imports
+getgenv().Library = getgenv().Library or loadstring(game:HttpGet("https://raw.githubusercontent.com/bottomnoah/UI/refs/heads/main/cola.lua"))()
+getgenv().drawhelper = loadstring(game:HttpGet("https://raw.githubusercontent.com/bottomnoah/UI/refs/heads/main/drawing"))()
+local Wait = getgenv().Library.subs.Wait
+
+-- Check for required functions
+if not getgc or not rawget then
+    localplayer:Kick("[dsc.gg/kaotiksoftworks]\nExecutor must support getgc and rawget to run this script. Try Using Swift.")
+end
+
+-- Module Cache
+getgenv().moduleCache = getgenv().moduleCache or {}
+if next(getgenv().moduleCache) == nil then
+    for _, v in getgc(true) do
+        if type(v) == "table" and rawget(v, "ScreenCull") and rawget(v, "NetworkClient") then
+            getgenv().moduleCache = v
+            break
+        end
+    end
+end
+
+if not getgenv().moduleCache then
+    localplayer:Kick('[dsc.gg/kaotiksoftworks]\nModules Not found. Do you have FFlagDebugRunParallelLuaOnMainThread set to True?')
+end
+
+local modules = {}
+for name, data in getgenv().moduleCache do modules[name] = data.module end
+
+getgenv().effects = modules.Effects
+getgenv().vector = modules.VectorLib
+getgenv().physics = modules.PhysicsLib
+getgenv().raycastLib = modules.Raycast
+getgenv().cframeLib = modules.CFrameLib
+getgenv().recoil = modules.RecoilSprings
+getgenv().network = modules.NetworkClient
+getgenv().screenCull = modules.ScreenCull
+getgenv().modifyData = modules.ModifyData
+getgenv().bulletcheck = modules.BulletCheck
+getgenv().audioSystem = modules.AudioSystem
+getgenv().bulletObject = modules.BulletObject
+getgenv().charObject = modules.CharacterObject
+getgenv().skinCaseUtils = modules.SkinCaseUtils
+getgenv().firearmObject = modules.FirearmObject
+getgenv().desktopHitBox = modules.DesktopHitBox
+getgenv().cameraObject = modules.MainCameraObject
+getgenv().playerRegistry = modules.PlayerRegistry
+getgenv().publicSettings = modules.PublicSettings
+getgenv().playerDataUtils = modules.PlayerDataUtils
+getgenv().cameraInterface = modules.CameraInterface
+getgenv().contentDatabase = modules.ContentDatabase
+getgenv().hudnotify = modules.HudNotificationConfig
+getgenv().charInterface = modules.CharacterInterface
+getgenv().hudScopeInterface = modules.HudScopeInterface
+getgenv().unscaledScreenGui = modules.UnscaledScreenGui
+getgenv().replicationObject = modules.ReplicationObject
+getgenv().thirdPersonObject = modules.ThirdPersonObject
+getgenv().weaponObject = modules.WeaponControllerObject
+getgenv().playerClient = modules.PlayerDataClientInterface
+getgenv().roundSystem = modules.RoundSystemClientInterface
+getgenv().weaponInterface = modules.WeaponControllerInterface
+getgenv().replicationInterface = modules.ReplicationInterface
+getgenv().crosshairsInterface = modules.HudCrosshairsInterface
+
+-- Network Connections
+local networkConnections
+for _, v in getgc(true) do
+    if type(v) == "table" and rawget(v, "died") and rawget(v, "smallaward") then
+        networkConnections = v
+        break
+    end
+end
+
+-- Suppress console spam
+getfenv(cameraInterface.setCameraType).print = function() end
+getfenv(cameraInterface.setCameraType).warn = function() end
+
+getgenv().ticketCache = {}
+getgenv().currentObj, getgenv().started, getgenv().fakeRepObject = nil, false, nil
+fakeRepObject = replicationObject.new(setmetatable({}, {
+    __index = function(self, index) return localplayer[index] end,
+    __newindex = function(self, index, value) localplayer[index] = value end
+}))
+
+getgenv().State = {
+    IsRightClickHeld = false,
+    TargetPart = nil,
+    OriginalProperties = {},
+    CachedProperties = {},
+    PlayersToDraw = {},
+    Highlights = {},
+    Storage = {ESPCache = {}},
+    MousePreload = {Active = false, LastTime = 0, Interval = 5, Connection = nil},
+    CrosshairUpdate = nil,
+    ThirdPersonConnection = nil,
+    ViewmodelProperties = {},
+    AntiAimConnection = nil,
+    SnaplineUpdate = nil,
+    lastAimState = false,
+    fovTween = nil,
+    ogRadius = {getgenv().Settings.FOV.Radius, getgenv().Settings.FOV.Circle.Radius, getgenv().Settings.FOV.OutlineCircle.Radius}
+}
+
+getgenv().callbackList = getgenv().callbackList or {}
+
+-- Crosshair Helpers
+local function setLine(line, visible, from, to, color, thickness, transparency)
+    line.Visible = visible
+    if visible then
+        line.From = from
+        line.To = to
+        line.Color = color
+        line.Thickness = thickness
+        line.Transparency = transparency
+    end
+end
+
+local function setDot(dot, visible, position, radius, color, transparency, filled)
+    dot.Visible = visible
+    if visible then
+        dot.Position = position
+        dot.Radius = radius
+        dot.Color = color
+        dot.Transparency = transparency
+        dot.Filled = filled
+    end
+end
+
+getgenv().initializeCrosshair = function()
+    for _, d in getgenv().Settings.Crosshair.Drawings do
+        d.Visible = false
+    end
+end
+
+getgenv().updateCrosshair = function()
+    if not getgenv().Settings.Crosshair.Enabled then return end
+    local center = Vector2.new(Camera.ViewportSize.X
