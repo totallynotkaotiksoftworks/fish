@@ -1,0 +1,248 @@
+-- Settings for Astralis
+-- Configuration tables and config management functions
+
+getgenv().Settings = {
+    Aimbot = {
+        Enabled = false, 
+        HitPart = "Head", 
+        WallCheck = false, 
+        AutoTargetSwitch = false, 
+        MaxDistance = {Enabled = false, Value = 500}, 
+        Easing = {Strength = 0.1, Sensitivity = Instance.new("NumberValue")}
+    },
+    ForceHit = {
+        Enabled = false,
+        HitPart = "Closest Part",
+        UseFOV = false
+    },
+    ESP = {
+        Enabled = false, 
+        MaxDistance = {Enabled = false, Value = 500}, 
+        VisibilityCheck = false, 
+        UseFOV = false, 
+        Features = {
+            Box = {Enabled = false, Color = Color3.fromRGB(255, 255, 255)}, 
+            Tracer = {Enabled = false, Color = Color3.fromRGB(255, 255, 255)}, 
+            DistanceText = {Enabled = false, Color = Color3.fromRGB(255, 255, 255)}, 
+            Name = {Enabled = false, Color = Color3.fromRGB(255, 255, 255)}, 
+            HeadDot = {Enabled = false, Color = Color3.fromRGB(255, 255, 255)},
+            HealthBar = {
+                Enabled = false,
+                Color = Color3.fromRGB(50, 255, 50),
+                BackgroundColor = Color3.fromRGB(20, 20, 20),
+                OutlineColor = Color3.fromRGB(100, 100, 100),
+                Width = 2,
+                Height = 40
+            }
+        }
+    },
+    FOV = {
+        Enabled = false, 
+        FollowGun = false, 
+        Radius = 50, 
+        Circle = drawing.new("Circle"), 
+        OutlineCircle = drawing.new("Circle"), 
+        Filled = false, 
+        FillColor = Color3.fromRGB(0, 0, 0), 
+        FillTransparency = 0.2, 
+        OutlineColor = Color3.fromRGB(255, 255, 255), 
+        OutlineTransparency = 1,
+        Dynamic = false
+    },
+    Snapline = {
+        Enabled = false,
+        Color = Color3.fromRGB(255, 255, 255),
+        Thickness = 1,
+        Transparency = 1,
+        Line = drawing.new("Line")
+    },
+    Chams = {
+        Enabled = false, 
+        TeamCheck = true, 
+        Teammates = false, 
+        Fill = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0.5}, 
+        Outline = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}
+    },
+    Player = {
+        Bhop = {Enabled = false}, 
+        WalkSpeed = {Enabled = false, Value = 16}, 
+        JumpPower = {Enabled = false, Value = 0}
+    },
+    Misc = {
+        Textures = false, 
+        VotekickRejoiner = false, 
+        Optimized = false
+    },
+    Crosshair = {
+        Enabled = false, 
+        Size = 10, 
+        Thickness = 1, 
+        Gap = 5, 
+        Color = Color3.fromRGB(255, 255, 255), 
+        Transparency = 1, 
+        Dot = false, 
+        TStyle = "Default", 
+        Drawings = {
+            Line1 = drawing.new("Line"), 
+            Line2 = drawing.new("Line"), 
+            Line3 = drawing.new("Line"), 
+            Line4 = drawing.new("Line"), 
+            CenterDot = drawing.new("Circle")
+        }
+    },
+    ThirdPerson = {
+        Enabled = false, 
+        ShowCharacter = false, 
+        ApplyAntiAimToCharacter = true, 
+        CameraOffsetAlwaysVisible = false, 
+        ShowCharacterWhileAiming = false, 
+        CameraOffsetX = 3, 
+        CameraOffsetY = 1, 
+        CameraOffsetZ = 4, 
+        HideViewmodel = false
+    },
+    AntiAim = {
+        Enabled = false, 
+        Mode = "Spin", 
+        SpinSpeed = 50, 
+        JitterAngle = 45, 
+        StaticAngle = 90, 
+        PitchMode = "None", 
+        PitchAngle = 45, 
+        ForceStance = false
+    },
+    SilentAim = {
+        Enabled = false, 
+        HitPart = "Head", 
+        UseFOV = false, 
+        WallCheck = false,
+        HitChance = 100
+    },
+    RageBot = {
+        Enabled = false,
+        FireRateBypass = false,
+        ShootEffects = true,
+        FirePositionScanning = false,
+        FirePositionOffset = 0.5,
+        HitPositionScanning = false,
+        HitPositionOffset = 0.5
+    },
+    GunMods = {
+        NoRecoil = 0, 
+        NoSpread = false, 
+        NoSway = false, 
+        NoWalkSway = false, 
+        NoCameraBob = false, 
+        NoSniperScope = false, 
+        InstantReload = false, 
+        SmallCrosshair = false,
+        AutoReload = false,
+        NoCrosshair = false
+    },
+    ViewModelChams = {
+        Arms = {
+            Enabled = false,
+            Color = Color3.fromRGB(255, 0, 0),
+            Material = "SmoothPlastic",
+            Transparency = 0
+        },
+        Weapons = {
+            Enabled = false,
+            Color = Color3.fromRGB(0, 0, 255),
+            Material = "SmoothPlastic",
+            Transparency = 0
+        },
+        Textures = {
+            Enabled = false,
+            Color = Color3.fromRGB(255, 255, 255),
+            Material = "SmoothPlastic",
+            Transparency = 0,
+            RemoveTextures = false
+        }
+    },
+    Lighting = {
+        Ambient = {
+            Enabled = false,
+            Color = Color3.fromRGB(255, 255, 255)
+        },
+        OutdoorAmbient = {
+            Enabled = false,
+            Color = Color3.fromRGB(255, 255, 255)
+        },
+        ClockTime = {
+            Enabled = false,
+            Time = 12
+        }
+    }
+}
+
+getgenv().Configs = {
+    Current = "default",
+    Path = "astralis_configs/",
+    Files = {}
+}
+
+getgenv().OriginalLightingProperties = {
+    Ambient = game:GetService("Lighting").Ambient,
+    OutdoorAmbient = game:GetService("Lighting").OutdoorAmbient,
+    ClockTime = game:GetService("Lighting").ClockTime
+}
+
+local Library = getgenv().Library
+local HttpService = game:GetService("HttpService")
+
+function saveConfig(name)
+    if not name or name == "" or name == "None" then
+        Library:Notify({Text = "Please enter a valid config name"})
+        return
+    end
+    if not isfolder(Configs.Path) then makefolder(Configs.Path) end
+    local configData = {}
+    local function serializeTable(t, prefix)
+        for k, v in pairs(t) do
+            local fullKey = prefix and prefix .. "." .. k or k
+            if type(v) == "table" then
+                serializeTable(v, fullKey)
+            elseif type(v) == "userdata" then
+                if typeof(v) == "NumberValue" then
+                    configData[fullKey] = v.Value
+                elseif typeof(v) == "Color3" then
+                    configData[fullKey] = {R = v.R, G = v.G, B = v.B}
+                elseif typeof(v) == "EnumItem" and v.EnumType == Enum.Material then
+                    configData[fullKey] = v.Name
+                else
+                    configData[fullKey] = tostring(v)
+                end
+            else
+                configData[fullKey] = v
+            end
+        end
+    end
+    serializeTable(getgenv().Settings)
+    writefile(Configs.Path .. name .. ".json", HttpService:JSONEncode(configData))
+    Configs.Current = name
+    if getgenv().refreshConfigList then
+        getgenv().refreshConfigList()
+    end
+    Library:Notify({Text = "Config saved: " .. name})
+end
+
+function deleteConfig(name)
+    if not name or name == "" or name == "None" then
+        Library:Notify({Text = "Please select a valid config to delete"})
+        return
+    end
+    if not isfolder(Configs.Path) or not isfile(Configs.Path .. name .. ".json") then
+        Library:Notify({Text = "Config not found: " .. name})
+        return
+    end
+    delfile(Configs.Path .. name .. ".json")
+    if Configs.Current == name then Configs.Current = "" end
+    if getgenv().refreshConfigList then
+        getgenv().refreshConfigList()
+    end
+    Library:Notify({Text = "Config deleted: " .. name})
+    if getgenv().ConfigNameTextbox and Configs.Current == "" then
+        getgenv().ConfigNameTextbox:Set("")
+    end
+end

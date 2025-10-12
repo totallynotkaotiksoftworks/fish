@@ -1,0 +1,910 @@
+-- UI for Astralis
+-- Sets up the user interface with tabs and controls
+
+local Library = getgenv().Library
+local Settings = getgenv().Settings
+local Configs = getgenv().Configs
+
+local Window = Library:CreateWindow({Name = "Astralis", Themeable = {Info = "dsc.gg/kaotiksoftworks"}})
+local Tabs = {
+    Main = Window:CreateTab({Name = "Main"}),
+    Mods = Window:CreateTab({Name = "Mods"}),
+    Visuals = Window:CreateTab({Name = "Visuals"}),
+    Player = Window:CreateTab({Name = "Player"}),
+    Misc = Window:CreateTab({Name = "Misc"}),
+    Configs = Window:CreateTab({Name = "Configs"})
+}
+
+-- Gun Modifications
+local GunModsGroup = Tabs.Mods:CreateSection({Name = "Gun Modifications"})
+GunModsGroup:AddSlider({
+    Name = "Recoil Reduction %",
+    Flag = "NoRecoil",
+    Value = Settings.GunMods.NoRecoil,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(v) Settings.GunMods.NoRecoil = v end
+})
+GunModsGroup:AddToggle({Name = "No Spread", Flag = "NoSpread", Value = Settings.GunMods.NoSpread, Callback = function(s) Settings.GunMods.NoSpread = s end})
+GunModsGroup:AddToggle({Name = "No Gun Sway", Flag = "NoSway", Value = Settings.GunMods.NoSway, Callback = function(s) Settings.GunMods.NoSway = s end})
+GunModsGroup:AddToggle({Name = "No Sniper Scope", Flag = "NoSniperScope", Value = Settings.GunMods.NoSniperScope, Callback = function(s) Settings.GunMods.NoSniperScope = s end})
+GunModsGroup:AddToggle({Name = "Instant Reload", Flag = "InstantReload", Value = Settings.GunMods.InstantReload, Callback = function(s) Settings.GunMods.InstantReload = s end})
+GunModsGroup:AddToggle({Name = "No Reload", Flag = "AutoReload", Value = Settings.GunMods.AutoReload, Callback = function(s) Settings.GunMods.AutoReload = s end})
+GunModsGroup:AddToggle({Name = "No Walk Sway", Flag = "NoWalkSway", Value = Settings.GunMods.NoWalkSway, Callback = function(s) Settings.GunMods.NoWalkSway = s end})
+
+-- Camera Modifications
+local CamModsGroup = Tabs.Mods:CreateSection({Name = "Camera Modifications", Side = "Right"})
+CamModsGroup:AddToggle({Name = "No Camera Bob", Flag = "NoCameraBob", Value = Settings.GunMods.NoCameraBob, Callback = function(s) Settings.GunMods.NoCameraBob = s end})
+
+-- Crosshair
+local CrosshairGroup = Tabs.Misc:CreateSection({Name = "Crosshair"})
+CrosshairGroup:AddToggle({Name = "Enabled", Flag = "CrosshairEnabled", Value = Settings.Crosshair.Enabled, Callback = function(s) Settings.Crosshair.Enabled = s getgenv().toggleCrosshair(s) end})
+CrosshairGroup:AddDropdown({Name = "Style", Flag = "CrosshairStyle", List = {"Default", "Plus"}, Value = Settings.Crosshair.TStyle, Callback = function(v) Settings.Crosshair.TStyle = v end})
+CrosshairGroup:AddToggle({Name = "Center Dot", Flag = "CrosshairDot", Value = Settings.Crosshair.Dot, Callback = function(s) Settings.Crosshair.Dot = s end})
+CrosshairGroup:AddSlider({Name = "Size", Flag = "CrosshairSize", Value = Settings.Crosshair.Size, Min = 1, Max = 30, Rounding = 0, Callback = function(v) Settings.Crosshair.Size = v end})
+CrosshairGroup:AddSlider({Name = "Thickness", Flag = "CrosshairThickness", Value = Settings.Crosshair.Thickness, Min = 1, Max = 5, Rounding = 0, Callback = function(v) Settings.Crosshair.Thickness = v end})
+CrosshairGroup:AddSlider({Name = "Gap", Flag = "CrosshairGap", Value = Settings.Crosshair.Gap, Min = 0, Max = 20, Rounding = 0, Callback = function(v) Settings.Crosshair.Gap = v end})
+CrosshairGroup:AddColorPicker({Name = "Color", Flag = "CrosshairColor", Color = Settings.Crosshair.Color, Transparency = 0, Callback = function(v) Settings.Crosshair.Color = v end})
+CrosshairGroup:AddSlider({Name = "Transparency", Flag = "CrosshairTransparency", Value = Settings.Crosshair.Transparency, Min = 0, Max = 1, Rounding = 2, Callback = function(v) Settings.Crosshair.Transparency = v end})
+
+-- Third Person
+local ThirdPersonGroup = Tabs.Player:CreateSection({Name = "Third Person"})
+ThirdPersonGroup:AddToggle({
+    Name = "Enabled",
+    Flag = "ThirdPersonEnabled",
+    Value = Settings.ThirdPerson.Enabled,
+    Callback = function(s)
+        Settings.ThirdPerson.Enabled = s
+        if getgenv().charInterface.isAlive() and Settings.ThirdPerson.ShowCharacter then
+            if s then
+                getgenv().started = true
+            else
+                getgenv().fakeRepObject:despawn()
+                if getgenv().currentObj then
+                    getgenv().currentObj:Destroy()
+                    getgenv().currentObj = nil
+                    getgenv().lastPos = nil
+                end
+            end
+        end
+    end
+})
+ThirdPersonGroup:AddToggle({
+    Name = "Show Character",
+    Flag = "ThirdPersonShowCharacter",
+    Value = Settings.ThirdPerson.ShowCharacter,
+    Callback = function(s)
+        Settings.ThirdPerson.ShowCharacter = s
+        if getgenv().charInterface.isAlive() and Settings.ThirdPerson.Enabled then
+            if s then
+                getgenv().started = true
+            else
+                getgenv().fakeRepObject:despawn()
+                if getgenv().currentObj then
+                    getgenv().currentObj:Destroy()
+                    getgenv().currentObj = nil
+                    getgenv().lastPos = nil
+                end
+            end
+        end
+    end
+})
+ThirdPersonGroup:AddToggle({Name = "Show Character While Aiming", Flag = "ThirdPersonShowCharacterWhileAiming", Value = Settings.ThirdPerson.ShowCharacterWhileAiming, Callback = function(s) Settings.ThirdPerson.ShowCharacterWhileAiming = s end})
+ThirdPersonGroup:AddToggle({Name = "Camera Offset Always Visible", Flag = "ThirdPersonCameraOffsetAlwaysVisible", Value = Settings.ThirdPerson.CameraOffsetAlwaysVisible, Callback = function(s) Settings.ThirdPerson.CameraOffsetAlwaysVisible = s end})
+ThirdPersonGroup:AddToggle({Name = "Hide Viewmodel", Flag = "ThirdPersonHideViewmodel", Value = Settings.ThirdPerson.HideViewmodel, Callback = function(s) Settings.ThirdPerson.HideViewmodel = s end})
+ThirdPersonGroup:AddSlider({Name = "Camera Offset X", Flag = "ThirdPersonCameraOffsetX", Value = Settings.ThirdPerson.CameraOffsetX, Min = -10, Max = 10, Rounding = 1, Callback = function(v) Settings.ThirdPerson.CameraOffsetX = v end})
+ThirdPersonGroup:AddSlider({Name = "Camera Offset Y", Flag = "ThirdPersonCameraOffsetY", Value = Settings.ThirdPerson.CameraOffsetY, Min = -10, Max = 10, Rounding = 1, Callback = function(v) Settings.ThirdPerson.CameraOffsetY = v end})
+ThirdPersonGroup:AddSlider({Name = "Camera Offset Z", Flag = "ThirdPersonCameraOffsetZ", Value = Settings.ThirdPerson.CameraOffsetZ, Min = -10, Max = 10, Rounding = 1, Callback = function(v) Settings.ThirdPerson.CameraOffsetZ = v end})
+
+-- Aimbot
+local AimbotGroup = Tabs.Main:CreateSection({Name = "Aimbot"})
+AimbotGroup:AddToggle({
+    Name = "Enabled",
+    Flag = "AimbotEnabled",
+    Value = Settings.Aimbot.Enabled,
+    Callback = function(s)
+        Settings.Aimbot.Enabled = s
+        if s then
+            getgenv().startMousePreload()
+            getgenv().State.InputBeganConnection = UserInputService.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton2 then getgenv().State.IsRightClickHeld = true getgenv().State.TargetPart = getgenv().Utils.getClosestPlayer(nil, Settings.Aimbot.HitPart) end end)
+            getgenv().State.InputEndedConnection = UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton2 then getgenv().State.IsRightClickHeld = false getgenv().State.TargetPart = nil end end)
+            getgenv().State.RenderSteppedConnection = RunService.RenderStepped:Connect(function() if getgenv().State.IsRightClickHeld and getgenv().State.TargetPart then if Settings.Aimbot.WallCheck then if getgenv().Utils.isVisible(getgenv().State.TargetPart, true) then getgenv().aimAt() end else getgenv().aimAt() end end end)
+        else
+            getgenv().stopMousePreload()
+            if getgenv().State.InputBeganConnection then getgenv().State.InputBeganConnection:Disconnect() end
+            if getgenv().State.InputEndedConnection then getgenv().State.InputEndedConnection:Disconnect() end
+            if getgenv().State.RenderSteppedConnection then getgenv().State.RenderSteppedConnection:Disconnect() end
+        end
+    end
+})
+AimbotGroup:AddDropdown({Name = "Hit Part", Flag = "AimbotHitPart", List = {"Head", "Torso", "Closest Part"}, Value = Settings.Aimbot.HitPart, Callback = function(v) Settings.Aimbot.HitPart = v end})
+AimbotGroup:AddToggle({Name = "Wall Check", Flag = "AimbotWallCheck", Value = Settings.Aimbot.WallCheck, Callback = function(s) Settings.Aimbot.WallCheck = s end})
+AimbotGroup:AddToggle({Name = "Auto Target Switch", Flag = "AimbotAutoTargetSwitch", Value = Settings.Aimbot.AutoTargetSwitch, Callback = function(s) Settings.Aimbot.AutoTargetSwitch = s end})
+AimbotGroup:AddToggle({Name = "Use Max Distance", Flag = "AimbotMaxDistanceEnabled", Value = Settings.Aimbot.MaxDistance.Enabled, Callback = function(s) Settings.Aimbot.MaxDistance.Enabled = s end})
+AimbotGroup:AddSlider({Name = "Max Distance", Flag = "AimbotMaxDistance", Value = Settings.Aimbot.MaxDistance.Value, Min = 10, Max = 1000, Rounding = 0, Callback = function(v) Settings.Aimbot.MaxDistance.Value = v end})
+AimbotGroup:AddSlider({Name = "Strength", Flag = "AimbotEasingStrength", Value = Settings.Aimbot.Easing.Strength, Min = 0.1, Max = 1.5, Decimals = 1, Rounding = 1, Callback = function(v) Settings.Aimbot.Easing.Strength = v getgenv().updateSensitivity(v) end})
+
+-- Silent Aim
+local SilentAimGroup = Tabs.Main:CreateSection({Name = "Silent Aim"})
+SilentAimGroup:AddToggle({Name = "Enabled", Flag = "SilentAimEnabled", Value = Settings.SilentAim.Enabled, Callback = function(s) Settings.SilentAim.Enabled = s if s then getgenv().initializeSilentAim() end end})
+SilentAimGroup:AddDropdown({Name = "Hit Part", Flag = "SilentAimHitPart", List = {"Head", "Torso", "Closest Part"}, Value = Settings.SilentAim.HitPart, Callback = function(v) Settings.SilentAim.HitPart = v end})
+SilentAimGroup:AddSlider({Name = "Hit Chance", Flag = "SilentAimHitChance", Value = Settings.SilentAim.HitChance, Min = 0, Max = 100, Rounding = 0, Callback = function(v) Settings.SilentAim.HitChance = v end})
+SilentAimGroup:AddToggle({Name = "Use FOV", Flag = "SilentAimUseFOV", Value = Settings.SilentAim.UseFOV, Callback = function(s) Settings.SilentAim.UseFOV = s end})
+SilentAimGroup:AddToggle({Name = "Wall Check", Flag = "SilentAimWallCheck", Value = Settings.SilentAim.WallCheck, Callback = function(s) Settings.SilentAim.WallCheck = s end})
+
+SilentAimGroup:AddToggle({
+    Name = "Snaplines",
+    Flag = "SnaplineEnabled",
+    Value = Settings.Snapline.Enabled,
+    Callback = function(s)
+        Settings.Snapline.Enabled = s
+        if s then
+            getgenv().State.SnaplineUpdate = RunService.RenderStepped:Connect(getgenv().updateSnapline)
+        else
+            if getgenv().State.SnaplineUpdate then getgenv().State.SnaplineUpdate:Disconnect() getgenv().State.SnaplineUpdate = nil end
+            Settings.Snapline.Line.Visible = false
+        end
+    end
+})
+
+-- Force Hit
+local ForceHitGroup = Tabs.Main:CreateSection({Name = "Force Hit"})
+ForceHitGroup:AddToggle({Name = "Enabled", Flag = "ForceHitEnabled", Value = Settings.ForceHit.Enabled, Callback = function(s) Settings.ForceHit.Enabled = s end})
+ForceHitGroup:AddDropdown({Name = "Hit Part", Flag = "ForceHitHitPart", List = {"Closest Part", "Head"}, Value = Settings.ForceHit.HitPart, Callback = function(v) Settings.ForceHit.HitPart = v end})
+ForceHitGroup:AddToggle({Name = "Use FOV", Flag = "ForceHitUseFOV", Value = Settings.ForceHit.UseFOV, Callback = function(s) Settings.ForceHit.UseFOV = s end})
+
+-- ESP
+local ESPGroup = Tabs.Visuals:CreateSection({Name = "ESP"})
+ESPGroup:AddToggle({
+    Name = "Enabled",
+    Flag = "ESPEnabled",
+    Value = Settings.ESP.Enabled,
+    Callback = function(s)
+        Settings.ESP.Enabled = s
+        if s then
+            getgenv().initializeESP()
+            getgenv().State.PlayerCacheUpdate = RunService.Heartbeat:Connect(getgenv().updatePlayerCache)
+            local last = tick()
+            local interval = 1 / 240
+            getgenv().State.ESPLoop = RunService.Heartbeat:Connect(function()
+                local now = tick()
+                if now - last >= interval then
+                    getgenv().renderESP()
+                    last = now
+                end
+            end)
+        else
+            if getgenv().State.PlayerCacheUpdate then getgenv().State.PlayerCacheUpdate:Disconnect() end
+            if getgenv().State.ESPLoop then getgenv().State.ESPLoop:Disconnect() end
+            for p in getgenv().State.Storage.ESPCache do getgenv().uncacheObject(p) end
+            getgenv().State.PlayersToDraw = {}
+            getgenv().State.CachedProperties = {}
+        end
+    end
+})
+local function updateESPFeature(f, s)
+    Settings.ESP.Features[f].Enabled = s
+    for _, c in getgenv().State.Storage.ESPCache do
+        if f == "Box" then c.BoxSquare.Visible = s c.BoxOutline.Visible = s
+        elseif f == "Tracer" then c.TracerLine.Visible = s
+        elseif f == "HeadDot" then c.HeadDot.Visible = s
+        elseif f == "DistanceText" then c.DistanceLabel.Visible = s
+        elseif f == "Name" then c.NameLabel.Visible = s
+        end
+    end
+end
+ESPGroup:AddToggle({Name = "Box", Flag = "ESPBox", Value = Settings.ESP.Features.Box.Enabled, Callback = function(s) updateESPFeature("Box", s) end})
+ESPGroup:AddToggle({Name = "Tracer", Flag = "ESPTracer", Value = Settings.ESP.Features.Tracer.Enabled, Callback = function(s) updateESPFeature("Tracer", s) end})
+ESPGroup:AddToggle({Name = "Head Dot", Flag = "ESPHeadDot", Value = Settings.ESP.Features.HeadDot.Enabled, Callback = function(s) updateESPFeature("HeadDot", s) end})
+ESPGroup:AddToggle({Name = "Distance", Flag = "ESPDistance", Value = Settings.ESP.Features.DistanceText.Enabled, Callback = function(s) updateESPFeature("DistanceText", s) end})
+ESPGroup:AddToggle({Name = "Name", Flag = "ESPName", Value = Settings.ESP.Features.Name.Enabled, Callback = function(s) updateESPFeature("Name", s) end})
+ESPGroup:AddToggle({Name = "Wall Check", Flag = "ESPVisibilityCheck", Value = Settings.ESP.VisibilityCheck, Callback = function(s) Settings.ESP.VisibilityCheck = s end})
+
+-- ESP Colors
+local ESPCustomization = Tabs.Visuals:CreateSection({Name = "ESP Colors", Side = "Right"})
+local function updateESPColor(f, c)
+    Settings.ESP.Features[f].Color = c
+    for _, cache in getgenv().State.Storage.ESPCache do
+        if f == "Box" then cache.BoxSquare.Color = c
+        elseif f == "Tracer" then cache.TracerLine.Color = c
+        elseif f == "HeadDot" then cache.HeadDot.Color = c
+        elseif f == "DistanceText" then cache.DistanceLabel.Color = c
+        elseif f == "Name" then cache.NameLabel.Color = c
+        end
+    end
+end
+ESPCustomization:AddColorPicker({Name = "Box Color", Flag = "ESPBoxColor", Color = Settings.ESP.Features.Box.Color, Callback = function(v) updateESPColor("Box", v) end})
+ESPCustomization:AddColorPicker({Name = "Tracer Color", Flag = "ESPTracerColor", Color = Settings.ESP.Features.Tracer.Color, Callback = function(v) updateESPColor("Tracer", v) end})
+ESPCustomization:AddColorPicker({Name = "Distance Color", Flag = "ESPDistanceColor", Color = Settings.ESP.Features.DistanceText.Color, Callback = function(v) updateESPColor("DistanceText", v) end})
+ESPCustomization:AddColorPicker({Name = "Head Dot Color", Flag = "ESPHeadDotColor", Color = Settings.ESP.Features.HeadDot.Color, Callback = function(v) updateESPColor("HeadDot", v) end})
+ESPCustomization:AddColorPicker({Name = "Name Color", Flag = "ESPNameColor", Color = Settings.ESP.Features.Name.Color, Callback = function(v) updateESPColor("Name", v) end})
+
+ESPCustomization:AddColorPicker({
+    Name = "Snapline Color",
+    Flag = "SnaplineColor",
+    Color = Settings.Snapline.Color,
+    Transparency = Settings.Snapline.Transparency,
+    Callback = function(v)
+        Settings.Snapline.Color = v
+        Settings.Snapline.Line.Color = v
+    end
+})
+
+ESPCustomization:AddSlider({
+    Name = "Snapline Thickness",
+    Flag = "SnaplineThickness",
+    Value = Settings.Snapline.Thickness,
+    Min = 1,
+    Max = 5,
+    Rounding = 0,
+    Callback = function(v)
+        Settings.Snapline.Thickness = v
+        Settings.Snapline.Line.Thickness = v
+    end
+})
+
+ESPCustomization:AddSlider({
+    Name = "Snapline Transparency",
+    Flag = "SnaplineTransparency",
+    Value = Settings.Snapline.Transparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(v)
+        Settings.Snapline.Transparency = v
+        Settings.Snapline.Line.Transparency = v
+    end
+})
+
+-- Health Bar
+ESPGroup:AddToggle({
+    Name = "Health Bar",
+    Flag = "ESPHealthBar",
+    Value = Settings.ESP.Features.HealthBar.Enabled,
+    Callback = function(s)
+        Settings.ESP.Features.HealthBar.Enabled = s
+        for _, c in getgenv().State.Storage.ESPCache do
+            if c.HealthBarBackground then c.HealthBarBackground.Visible = s end
+            if c.HealthBarForeground then c.HealthBarForeground.Visible = s end
+        end
+    end
+})
+
+local HealthBarCustomization = Tabs.Visuals:CreateSection({Name = "Health Bar Settings", Side = "Right"})
+HealthBarCustomization:AddSlider({Name = "Width", Flag = "ESPHealthBarWidth", Value = Settings.ESP.Features.HealthBar.Width, Min = 1, Max = 5, Rounding = 0, Callback = function(v) Settings.ESP.Features.HealthBar.Width = v end})
+HealthBarCustomization:AddSlider({Name = "Height", Flag = "ESPHealthBarHeight", Value = Settings.ESP.Features.HealthBar.Height, Min = 10, Max = 80, Rounding = 0, Callback = function(v) Settings.ESP.Features.HealthBar.Height = v end})
+HealthBarCustomization:AddColorPicker({
+    Name = "Health Bar Color",
+    Flag = "ESPHealthBarColor",
+    Color = Settings.ESP.Features.HealthBar.Color,
+    Callback = function(v)
+        Settings.ESP.Features.HealthBar.Color = v
+        for _, cache in getgenv().State.Storage.ESPCache do
+            if cache.HealthBarForeground then cache.HealthBarForeground.Color = v end
+        end
+    end
+})
+HealthBarCustomization:AddColorPicker({
+    Name = "Health Bar Background",
+    Flag = "ESPHealthBarBG",
+    Color = Settings.ESP.Features.HealthBar.BackgroundColor,
+    Callback = function(v)
+        Settings.ESP.Features.HealthBar.BackgroundColor = v
+        for _, cache in getgenv().State.Storage.ESPCache do
+            if cache.HealthBarBackground then cache.HealthBarBackground.Color = v end
+        end
+    end
+})
+HealthBarCustomization:AddColorPicker({
+    Name = "Outline Color",
+    Flag = "ESPHealthBarOutlineColor",
+    Color = Settings.ESP.Features.HealthBar.OutlineColor,
+    Transparency = 0.7,
+    Callback = function(v)
+        Settings.ESP.Features.HealthBar.OutlineColor = v
+        for _, cache in getgenv().State.Storage.ESPCache do
+            if cache.HealthBarOutline then cache.HealthBarOutline.Color = v end
+        end
+    end
+})
+
+-- Distance Settings
+local DistanceCustomization = Tabs.Visuals:CreateSection({Name = "Distance Settings", Side = "Right"})
+DistanceCustomization:AddToggle({
+    Name = "Use Max Distance",
+    Flag = "ESPMaxDistanceEnabled",
+    Value = Settings.ESP.MaxDistance.Enabled,
+    Callback = function(s)
+        Settings.ESP.MaxDistance.Enabled = s
+        getgenv().refreshPlayerCache()
+    end
+})
+DistanceCustomization:AddSlider({
+    Name = "Max Distance",
+    Flag = "ESPMaxDistance",
+    Value = Settings.ESP.MaxDistance.Value,
+    Min = 50,
+    Max = 1000,
+    Rounding = 0,
+    Callback = function(v)
+        Settings.ESP.MaxDistance.Value = v
+        getgenv().refreshPlayerCache()
+    end
+})
+
+-- FOV
+local FOVGroup = Tabs.Main:CreateSection({Name = "FOV", Side = "Right"})
+FOVGroup:AddToggle({
+    Name = "Show FOV Circle",
+    Flag = "FOVEnabled",
+    Value = Settings.FOV.Enabled,
+    Callback = function(s)
+        Settings.FOV.Enabled = s
+        Settings.FOV.Circle.Visible = s
+        Settings.FOV.OutlineCircle.Visible = s
+    end
+})
+FOVGroup:AddToggle({Name = "Follow Gun", Flag = "FOVFollowGun", Value = Settings.FOV.FollowGun, Callback = function(s) Settings.FOV.FollowGun = s end})
+FOVGroup:AddToggle({
+    Name = "Fill FOV Circle",
+    Flag = "FOVFilled",
+    Value = Settings.FOV.Filled,
+    Callback = function(s)
+        Settings.FOV.Filled = s
+        Settings.FOV.Circle.Filled = s
+        Settings.FOV.Circle.Color = s and Settings.FOV.FillColor or Settings.FOV.OutlineColor
+        Settings.FOV.Circle.Transparency = s and Settings.FOV.FillTransparency or Settings.FOV.OutlineTransparency
+        Settings.FOV.Circle.Thickness = s and 0 or 1
+        if Settings.FOV.Enabled then Settings.FOV.Circle.Visible = true end
+    end
+})
+FOVGroup:AddColorPicker({
+    Name = "Inline Color",
+    Flag = "FOVFillColor",
+    Color = Settings.FOV.FillColor,
+    Transparency = Settings.FOV.FillTransparency,
+    Callback = function(v)
+        Settings.FOV.FillColor = v
+        if Settings.FOV.Filled then Settings.FOV.Circle.Color = v end
+    end
+})
+FOVGroup:AddSlider({
+    Name = "Inline Transparency",
+    Flag = "FOVFillTransparency",
+    Value = Settings.FOV.FillTransparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(v)
+        Settings.FOV.FillTransparency = v
+        if Settings.FOV.Filled then Settings.FOV.Circle.Transparency = v end
+    end
+})
+FOVGroup:AddColorPicker({
+    Name = "Outline Color",
+    Flag = "FOVOutlineColor",
+    Color = Settings.FOV.OutlineColor,
+    Transparency = Settings.FOV.OutlineTransparency,
+    Callback = function(v)
+        Settings.FOV.OutlineColor = v
+        Settings.FOV.OutlineCircle.Color = v
+        if not Settings.FOV.Filled then Settings.FOV.Circle.Color = v end
+    end
+})
+FOVGroup:AddSlider({
+    Name = "Outline Transparency",
+    Flag = "FOVOutlineTransparency",
+    Value = Settings.FOV.OutlineTransparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(v)
+        Settings.FOV.OutlineTransparency = v
+        Settings.FOV.OutlineCircle.Transparency = v
+        if not Settings.FOV.Filled then Settings.FOV.Circle.Transparency = v end
+    end
+})
+FOVGroup:AddSlider({
+    Name = "FOV Radius",
+    Flag = "FOVRadius",
+    Value = Settings.FOV.Radius,
+    Min = 5,
+    Max = 1000,
+    Rounding = 0,
+    Callback = function(v)
+        Settings.FOV.Radius = v
+        Settings.FOV.Circle.Radius = v
+        Settings.FOV.OutlineCircle.Radius = v
+        getgenv().State.ogRadius = {v, v, v}
+    end
+})
+FOVGroup:AddToggle({Name = "Dynamic FOV", Flag = "FOVDynamic", Value = Settings.FOV.Dynamic, Callback = function(s) Settings.FOV.Dynamic = s end})
+
+-- Chams
+local ChamsGroup = Tabs.Visuals:CreateSection({Name = "Chams"})
+ChamsGroup:AddToggle({
+    Name = "Enabled",
+    Flag = "ChamsEnabled",
+    Value = Settings.Chams.Enabled,
+    Callback = function(s)
+        Settings.Chams.Enabled = s
+        if s then
+            getgenv().State.ChamsUpdateConnection = RunService.RenderStepped:Connect(getgenv().updateChams)
+        else
+            if getgenv().State.ChamsUpdateConnection then
+                getgenv().State.ChamsUpdateConnection:Disconnect()
+                getgenv().State.ChamsUpdateConnection = nil
+            end
+            for p in getgenv().State.Highlights do getgenv().removeHighlight(p) end
+        end
+    end
+})
+ChamsGroup:AddColorPicker({
+    Name = "Fill Color",
+    Flag = "ChamsFillColor",
+    Color = Settings.Chams.Fill.Color,
+    Transparency = 0,
+    Callback = function(v)
+        Settings.Chams.Fill.Color = v
+        for _, h in getgenv().State.Highlights do h.FillColor = v end
+    end
+})
+ChamsGroup:AddColorPicker({
+    Name = "Outline Color",
+    Flag = "ChamsOutlineColor",
+    Color = Settings.Chams.Outline.Color,
+    Transparency = 0,
+    Callback = function(v)
+        Settings.Chams.Outline.Color = v
+        for _, h in getgenv().State.Highlights do h.OutlineColor = v end
+    end
+})
+ChamsGroup:AddSlider({
+    Name = "Fill Transparency",
+    Flag = "ChamsFillTransparency",
+    Value = Settings.Chams.Fill.Transparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(v)
+        Settings.Chams.Fill.Transparency = v
+        for _, h in getgenv().State.Highlights do h.FillTransparency = v end
+    end
+})
+ChamsGroup:AddSlider({
+    Name = "Outline Transparency",
+    Flag = "ChamsOutlineTransparency",
+    Value = Settings.Chams.Outline.Transparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(v)
+        Settings.Chams.Outline.Transparency = v
+        for _, h in getgenv().State.Highlights do h.OutlineTransparency = v end
+    end
+})
+
+-- Player
+local PlayerGroup = Tabs.Player:CreateSection({Name = "Player"})
+PlayerGroup:AddToggle({Name = "Bunny Hop", Flag = "BhopEnabled", Value = Settings.Player.Bhop.Enabled, Callback = function(s) Settings.Player.Bhop.Enabled = s end})
+PlayerGroup:AddToggle({
+    Name = "Walk Speed",
+    Flag = "WalkSpeedEnabled",
+    Value = Settings.Player.WalkSpeed.Enabled,
+    Callback = function(s)
+        Settings.Player.WalkSpeed.Enabled = s
+        getgenv().callbackList["Player%%WalkSpeed"](s)
+    end
+})
+PlayerGroup:AddSlider({
+    Name = "Walk Speed Value",
+    Flag = "WalkSpeedValue",
+    Value = Settings.Player.WalkSpeed.Value,
+    Min = 10,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(v)
+        Settings.Player.WalkSpeed.Value = v
+        if Settings.Player.WalkSpeed.Enabled then getgenv().callbackList["Player%%WalkSpeedValue"](v) end
+    end
+})
+PlayerGroup:AddToggle({Name = "Jump Power", Flag = "JumpPowerEnabled", Value = Settings.Player.JumpPower.Enabled, Callback = function(s) Settings.Player.JumpPower.Enabled = s end})
+PlayerGroup:AddSlider({Name = "Jump Height Addition", Flag = "JumpPowerValue", Value = Settings.Player.JumpPower.Value, Min = 0, Max = 20, Rounding = 0, Callback = function(v) Settings.Player.JumpPower.Value = v end})
+
+-- Anti-Aim
+local AntiAimGroup = Tabs.Player:CreateSection({Name = "Anti-Aim", Side = "Right"})
+AntiAimGroup:AddToggle({
+    Name = "Enabled",
+    Flag = "AntiAimEnabled",
+    Value = Settings.AntiAim.Enabled,
+    Callback = function(s)
+        Settings.AntiAim.Enabled = s
+        getgenv().startTime = os.clock()
+        getgenv().lastFrameTime = nil
+        if s then
+            getgenv().State.AntiAimConnection = RunService.Heartbeat:Connect(function()
+                if Settings.AntiAim.Enabled and getgenv().charInterface.isAlive() then
+                    local currentCharObject = getgenv().charInterface.getCharacterObject()
+                    if currentCharObject then
+                        local rootPart = currentCharObject:getRealRootPart()
+                        if rootPart then
+                            local angles = getgenv().cameraInterface:getActiveCamera():getAngles()
+                            local modifiedAngles = getgenv().applyAAAngles(angles)
+                        end
+                    end
+                end
+            end)
+        else
+            if getgenv().State.AntiAimConnection then
+                getgenv().State.AntiAimConnection:Disconnect()
+                getgenv().State.AntiAimConnection = nil
+            end
+            local currentCharObject = getgenv().charInterface.getCharacterObject()
+            if currentCharObject then
+                currentCharObject:setStance("stand")
+                getgenv().network:send("stance", "stand")
+                if Settings.ThirdPerson.Enabled and getgenv().currentObj then
+                    getgenv().currentObj:setStance("stand")
+                end
+            end
+        end
+    end
+})
+AntiAimGroup:AddDropdown({Name = "Mode", Flag = "AntiAimMode", List = {"Spin", "Jitter", "Static"}, Value = Settings.AntiAim.Mode, Callback = function(v) Settings.AntiAim.Mode = v end})
+AntiAimGroup:AddSlider({Name = "Spin Speed", Flag = "AntiAimSpinSpeed", Value = Settings.AntiAim.SpinSpeed, Min = 10, Max = 5000, Rounding = 0, Callback = function(v) Settings.AntiAim.SpinSpeed = v end})
+AntiAimGroup:AddSlider({Name = "Jitter Angle", Flag = "AntiAimJitterAngle", Value = Settings.AntiAim.JitterAngle, Min = 10, Max = 180, Rounding = 0, Callback = function(v) Settings.AntiAim.JitterAngle = v end})
+AntiAimGroup:AddSlider({Name = "Static Angle", Flag = "AntiAimStaticAngle", Value = Settings.AntiAim.StaticAngle, Min = -180, Max = 180, Rounding = 0, Callback = function(v) Settings.AntiAim.StaticAngle = v end})
+AntiAimGroup:AddDropdown({Name = "Pitch Mode", Flag = "AntiAimPitchMode", List = {"None", "Up", "Down", "Random"}, Value = Settings.AntiAim.PitchMode, Callback = function(v) Settings.AntiAim.PitchMode = v end})
+AntiAimGroup:AddSlider({Name = "Pitch Angle", Flag = "AntiAimPitchAngle", Value = Settings.AntiAim.PitchAngle, Min = 0, Max = 89, Rounding = 0, Callback = function(v) Settings.AntiAim.PitchAngle = v end})
+
+-- RageBot
+local RageBotGroup = Tabs.Main:CreateSection({Name = "Rage Bot", Side = "Right"})
+RageBotGroup:AddToggle({Name = "Enabled", Flag = "RageBotEnabled", Value = Settings.RageBot.Enabled, Callback = function(s) Settings.RageBot.Enabled = s end})
+RageBotGroup:AddToggle({Name = "Fire Rate Bypass", Flag = "RageBotFireRateBypass", Value = Settings.RageBot.FireRateBypass, Callback = function(s) Settings.RageBot.FireRateBypass = s end})
+RageBotGroup:AddToggle({Name = "Shoot Effects", Flag = "RageBotShootEffects", Value = Settings.RageBot.ShootEffects, Callback = function(s) Settings.RageBot.ShootEffects = s end})
+RageBotGroup:AddToggle({Name = "Fire Position Scanning", Flag = "RageBotFirePositionScanning", Value = Settings.RageBot.FirePositionScanning, Callback = function(s) Settings.RageBot.FirePositionScanning = s end})
+RageBotGroup:AddSlider({Name = "Fire Position Offset", Flag = "RageBotFirePositionOffset", Value = Settings.RageBot.FirePositionOffset, Min = 0.1, Max = 2.0, Rounding = 1, Callback = function(v) Settings.RageBot.FirePositionOffset = v end})
+RageBotGroup:AddToggle({Name = "Hit Position Scanning", Flag = "RageBotHitPositionScanning", Value = Settings.RageBot.HitPositionScanning, Callback = function(s) Settings.RageBot.HitPositionScanning = s end})
+RageBotGroup:AddSlider({Name = "Hit Position Offset", Flag = "RageBotHitPositionOffset", Value = Settings.RageBot.HitPositionOffset, Min = 0.1, Max = 2.0, Rounding = 1, Callback = function(v) Settings.RageBot.HitPositionOffset = v end})
+
+-- Miscellaneous
+local Optimizations = Tabs.Misc:CreateSection({Name = "Miscellaneous"})
+Optimizations:AddToggle({
+    Name = "Toggle Textures",
+    Flag = "MiscTextures",
+    Value = Settings.Misc.Textures,
+    Callback = function(s)
+        Settings.Misc.Textures = s
+        if s then getgenv().optimizeMap() else getgenv().revertMap() end
+    end
+})
+
+-- Safety
+local Safety = Tabs.Misc:CreateSection({Name = "Safety", Side = "Right"})
+Safety:AddToggle({
+    Name = "Rejoin on Votekick",
+    Flag = "VotekickRejoiner",
+    Value = Settings.Misc.VotekickRejoiner,
+    Callback = function(s)
+        Settings.Misc.VotekickRejoiner = s
+        if s then getgenv().initializeVotekickRejoiner() end
+    end
+})
+Safety:AddButton({Name = "Rejoin", Callback = function() getgenv().kickAndRejoin() end})
+
+-- ViewModel Chams
+local ViewModelChams = Tabs.Misc:CreateSection({Name = "ViewModel Chams", Side = "Right"})
+ViewModelChams:AddToggle({
+    Name = "Arms Enabled",
+    Flag = "ViewModelChamsArmsEnabled",
+    Value = Settings.ViewModelChams.Arms.Enabled,
+    Callback = function(enabled)
+        Settings.ViewModelChams.Arms.Enabled = enabled
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddColorPicker({
+    Name = "Arms Color",
+    Flag = "ViewModelChamsArmsColor",
+    Color = Settings.ViewModelChams.Arms.Color,
+    Callback = function(color)
+        Settings.ViewModelChams.Arms.Color = color
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddDropdown({
+    Name = "Arms Material",
+    Flag = "ViewModelChamsArmsMaterial",
+    List = {"SmoothPlastic", "ForceField", "Neon", "Glass", "Fabric"},
+    Value = tostring(Settings.ViewModelChams.Arms.Material),
+    Callback = function(material)
+        Settings.ViewModelChams.Arms.Material = Enum.Material[material]
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddSlider({
+    Name = "Arms Transparency",
+    Flag = "ViewModelChamsArmsTransparency",
+    Value = Settings.ViewModelChams.Arms.Transparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        Settings.ViewModelChams.Arms.Transparency = value
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddToggle({
+    Name = "Weapon Enabled",
+    Flag = "ViewModelChamsWeaponsEnabled",
+    Value = Settings.ViewModelChams.Weapons.Enabled,
+    Callback = function(enabled)
+        Settings.ViewModelChams.Weapons.Enabled = enabled
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddColorPicker({
+    Name = "Weapon Color",
+    Flag = "ViewModelChamsWeaponsColor",
+    Color = Settings.ViewModelChams.Weapons.Color,
+    Callback = function(color)
+        Settings.ViewModelChams.Weapons.Color = color
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddDropdown({
+    Name = "Weapon Material",
+    Flag = "ViewModelChamsWeaponsMaterial",
+    List = {"SmoothPlastic", "ForceField", "Neon", "Glass", "Fabric"},
+    Value = tostring(Settings.ViewModelChams.Weapons.Material),
+    Callback = function(material)
+        Settings.ViewModelChams.Weapons.Material = Enum.Material[material]
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddSlider({
+    Name = "Weapon Transparency",
+    Flag = "ViewModelChamsWeaponsTransparency",
+    Value = Settings.ViewModelChams.Weapons.Transparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        Settings.ViewModelChams.Weapons.Transparency = value
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddToggle({
+    Name = "Texture Chams Enabled",
+    Flag = "ViewModelChamsTexturesEnabled",
+    Value = Settings.ViewModelChams.Textures.Enabled,
+    Callback = function(enabled)
+        Settings.ViewModelChams.Textures.Enabled = enabled
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddToggle({
+    Name = "Remove Textures",
+    Flag = "ViewModelChamsTexturesRemove",
+    Value = Settings.ViewModelChams.Textures.RemoveTextures,
+    Callback = function(enabled)
+        Settings.ViewModelChams.Textures.RemoveTextures = enabled
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddDropdown({
+    Name = "Texture Material",
+    Flag = "ViewModelChamsTexturesMaterial",
+    List = {"SmoothPlastic", "ForceField", "Neon", "Glass", "Fabric"},
+    Value = tostring(Settings.ViewModelChams.Textures.Material),
+    Callback = function(material)
+        Settings.ViewModelChams.Textures.Material = Enum.Material[material]
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddColorPicker({
+    Name = "Texture Color",
+    Flag = "ViewModelChamsTexturesColor",
+    Color = Settings.ViewModelChams.Textures.Color,
+    Callback = function(color)
+        Settings.ViewModelChams.Textures.Color = color
+        getgenv().updateViewModelChams()
+    end
+})
+ViewModelChams:AddSlider({
+    Name = "Texture Transparency",
+    Flag = "ViewModelChamsTexturesTransparency",
+    Value = Settings.ViewModelChams.Textures.Transparency,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(value)
+        Settings.ViewModelChams.Textures.Transparency = value
+        getgenv().updateViewModelChams()
+    end
+})
+
+-- Lighting
+local LightingSec = Tabs.Misc:CreateSection({Name = "Lighting", Side = "Left"})
+LightingSec:AddToggle({
+    Name = "Ambient Enabled",
+    Flag = "AmbientEnabled",
+    Value = Settings.Lighting.Ambient.Enabled,
+    Callback = function(enabled)
+        Settings.Lighting.Ambient.Enabled = enabled
+        getgenv().UpdateLighting()
+    end
+})
+LightingSec:AddColorPicker({
+    Name = "Ambient Color",
+    Flag = "AmbientColor",
+    Color = Settings.Lighting.Ambient.Color,
+    Callback = function(color)
+        Settings.Lighting.Ambient.Color = color
+        getgenv().UpdateLighting()
+    end
+})
+LightingSec:AddToggle({
+    Name = "Outdoor Ambient Enabled",
+    Flag = "OutdoorAmbientEnabled",
+    Value = Settings.Lighting.OutdoorAmbient.Enabled,
+    Callback = function(enabled)
+        Settings.Lighting.OutdoorAmbient.Enabled = enabled
+        getgenv().UpdateLighting()
+    end
+})
+LightingSec:AddColorPicker({
+    Name = "Outdoor Ambient Color",
+    Flag = "OutdoorAmbientColor",
+    Color = Settings.Lighting.OutdoorAmbient.Color,
+    Callback = function(color)
+        Settings.Lighting.OutdoorAmbient.Color = color
+        getgenv().UpdateLighting()
+    end
+})
+LightingSec:AddToggle({
+    Name = "Clock Time Enabled",
+    Flag = "ClockTimeEnabled",
+    Value = Settings.Lighting.ClockTime.Enabled,
+    Callback = function(enabled)
+        Settings.Lighting.ClockTime.Enabled = enabled
+        getgenv().UpdateLighting()
+    end
+})
+LightingSec:AddSlider({
+    Name = "Clock Time",
+    Flag = "ClockTime",
+    Value = Settings.Lighting.ClockTime.Time,
+    Min = 0,
+    Max = 24,
+    Rounding = 2,
+    Callback = function(value)
+        Settings.Lighting.ClockTime.Time = value
+        getgenv().UpdateLighting()
+    end
+})
+
+-- Configurations
+local ConfigGroup = Tabs.Configs:CreateSection({Name = "Configurations", Side = "Left"})
+getgenv().ConfigNameTextbox = ConfigGroup:AddTextBox({
+    Name = "Config Name",
+    Flag = "ConfigName",
+    Value = Configs.Current,
+    Callback = function(v)
+        Configs.Current = v
+        if getgenv().ConfigListDropdown then
+            pcall(function() if table.find(Configs.Files, v) then getgenv().ConfigListDropdown:Set(v) end end)
+        end
+    end
+})
+
+getgenv().refreshConfigList = function()
+    Configs.Files = {}
+    if not isfolder(Configs.Path) then makefolder(Configs.Path) end
+    for _, file in pairs(listfiles(Configs.Path)) do
+        local fileName = file:match("([^/\\]+)$")
+        if fileName and fileName:lower():match("%.json$") then
+            local configName = fileName:match("(.+)%.json$")
+            if configName then table.insert(Configs.Files, configName) end
+        end
+    end
+    table.sort(Configs.Files)
+    if getgenv().ConfigListDropdown then
+        local listToUse = #Configs.Files > 0 and Configs.Files or {"None"}
+        pcall(function() getgenv().ConfigListDropdown:Clear() end)
+        for _, config in ipairs(listToUse) do
+            pcall(function() getgenv().ConfigListDropdown:Add(config) end)
+        end
+        if #Configs.Files > 0 then
+            if table.find(Configs.Files, Configs.Current) then
+                pcall(function() getgenv().ConfigListDropdown:Set(Configs.Current) end)
+            else
+                pcall(function() getgenv().ConfigListDropdown:Set(Configs.Files[1]) end)
+            end
+        else
+            Configs.Current = ""
+            pcall(function() getgenv().ConfigListDropdown:Set("None") end)
+        end
+    end
+end
+
+local function createConfigDropdown()
+    if getgenv().ConfigListDropdown then
+        pcall(function() getgenv().ConfigListDropdown:Remove() getgenv().ConfigListDropdown = nil end)
+    end
+    local listToUse = #Configs.Files > 0 and Configs.Files or {"None"}
+    local valueToUse = (#Configs.Files > 0 and Configs.Current and table.find(Configs.Files, Configs.Current)) and Configs.Current or listToUse[1]
+    getgenv().ConfigListDropdown = ConfigGroup:AddDropdown({
+        Name = "Config List",
+        List = listToUse,
+        Value = valueToUse,
+        Callback = function(selected)
+            if selected and selected ~= "None" then
+                Configs.Current = selected
+                if getgenv().ConfigNameTextbox then
+                    pcall(function() getgenv().ConfigNameTextbox:Set(selected) end)
+                end
+            else
+                Configs.Current = ""
+                if getgenv().ConfigNameTextbox then
+                    pcall(function() getgenv().ConfigNameTextbox:Set("") end)
+                end
+            end
+        end
+    })
+end
+
+task.spawn(function()
+    task.wait(0.1)
+    getgenv().refreshConfigList()
+    createConfigDropdown()
+end)
+
+ConfigGroup:AddButton({
+    Name = "Save Config",
+    Callback = function()
+        local configName = Library.Flags.ConfigName or Configs.Current
+        if configName and configName ~= "" and configName ~= "None" then
+            saveConfig(configName)
+            getgenv().refreshConfigList()
+        else
+            Library:Notify({Text = "Please enter a valid config name"})
+        end
+    end
+})
+
+ConfigGroup:AddButton({
+    Name = "Load Config",
+    Callback = function()
+        local configName = Library.Flags.ConfigName or Configs.Current
+        if configName and configName ~= "" and configName ~= "None" then
+            getgenv().loadConfig(configName)
+            getgenv().refreshConfigList()
+        else
+            Library:Notify({Text = "Please select or enter a valid config name"})
+        end
+    end
+})
+
+ConfigGroup:AddButton({
+    Name = "Delete Config",
+    Callback = function()
+        local configName = Library.Flags.ConfigName or Configs.Current
+        if configName and configName ~= "" and configName ~= "None" then
+            deleteConfig(configName)
+            getgenv().refreshConfigList()
+        else
+            Library:Notify({Text = "Please select or enter a valid config name"})
+        end
+    end
+})
+
+ConfigGroup:AddButton({
+    Name = "Refresh List",
+    Callback = function()
+        getgenv().refreshConfigList()
+        createConfigDropdown()
+        Library:Notify({Text = "Config list refreshed"})
+    end
+})

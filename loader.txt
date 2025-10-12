@@ -1,0 +1,24 @@
+-- Astralis Loader
+-- Loads all modular scripts in the correct order
+
+local function loadScript(url)
+    local success, result = pcall(loadstring(game:HttpGet(url)))
+    if not success then
+        warn("Failed to load script from " .. url .. ": " .. result)
+    end
+end
+
+-- Define script URLs (replace with actual raw GitHub URLs or local paths)
+local scripts = {
+    "https://raw.githubusercontent.com/YourRepo/UI/refs/heads/main/utilities.lua",
+    "https://raw.githubusercontent.com/YourRepo/UI/refs/heads/main/settings.lua",
+    "https://raw.githubusercontent.com/YourRepo/UI/refs/heads/main/ui.lua",
+    "https://raw.githubusercontent.com/YourRepo/UI/refs/heads/main/core.lua"
+}
+
+-- Load each script
+for _, url in ipairs(scripts) do
+    loadScript(url)
+end
+
+print("Astralis scripts loaded successfully!")

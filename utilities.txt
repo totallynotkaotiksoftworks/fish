@@ -1,0 +1,157 @@
+-- Utilities for Astralis
+-- Shared functions for raycasting, player detection, etc.
+
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local UserInputService = game:GetService("UserInputService")
+local localplayer = Players.LocalPlayer
+local physicsignore = {workspace.Terrain, workspace.Ignore, workspace.Players, Camera}
+
+getgenv().Utils = getgenv().Utils or {}
+
+function Utils.raycast(origin, direction, filterlist)
+    local params = RaycastParams.new()
+    params.IgnoreWater = true
+    params.FilterDescendantsInstances = filterlist or physicsignore
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local result = workspace:Raycast(origin, direction, params)
+    return result and result.Instance, result and result.Position
+end
+
+function Utils.getBarrelLocation()
+    local weaponInterface = getgenv().modules.WeaponControllerInterface
+    local controller = weaponInterface.getActiveWeaponController()
+    local weapon = controller and controller:getActiveWeapon()
+    return weapon and not weapon._aiming and weapon._barrelPart and Camera:WorldToViewportPoint(weapon._barrelPart.CFrame * Vector3.new(0, 0, 0))
+end
+
+function Utils.getPlayers()
+    local entityList = {}
+    for _, team in workspace.Players:GetChildren() do
+        for _, player in team:GetChildren() do
+            if player:IsA("Model") then
+                table.insert(entityList, player)
+            end
+        end
+    end
+    return entityList
+end
+
+function Utils.isEnemy(player)
+    local localTeam = Players.LocalPlayer.Team.Name
+    local helmet = player:FindFirstChildWhichIsA("Folder") and player:FindFirstChildWhichIsA("Folder"):FindFirstChildOfClass("MeshPart")
+    if not helmet then return false end
+    local color = helmet.BrickColor.Name
+    return (color == "Black" and localTeam == "Ghosts") or (color ~= "Black" and localTeam == "Phantoms")
+end
+
+function Utils.isAlly(player)
+    local helmet = player:FindFirstChildWhichIsA("Folder") and player:FindFirstChildWhichIsA("Folder"):FindFirstChildOfClass("MeshPart")
+    if not helmet then return false end
+    return helmet.BrickColor.Name == "Black" and Players.LocalPlayer.Team == Teams.Phantoms or helmet.BrickColor.Name ~= "Black" and Players.LocalPlayer.Team == Teams.Ghosts
+end
+
+local TargetMeshIds = {
+    ["rbxassetid://4049240323"] = true, -- Arms
+    ["rbxassetid://4049240209"] = true, -- Legs
+    ["rbxassetid://4049240078"] = true, -- Torso
+    ["rbxassetid://6179256256"] = true, -- Head
+}
+
+local partMeshMapping = {
+    ["Head"] = "rbxassetid://6179256256",
+    ["Torso"] = "rbxassetid://4049240078",
+    ["Arms"] = "rbxassetid://4049240323",
+    ["Legs"] = "rbxassetid://4049240209",
+    ["rbxassetid://6179256256"] = "Head",
+    ["rbxassetid://4049240078"] = "Torso",
+    ["rbxassetid://4049240323"] = "Arms",
+    ["rbxassetid://4049240209"] = "Legs"
+}
+
+function Utils.getBodyPart(player, name)
+    local targetMeshId = partMeshMapping[name]
+    if not targetMeshId then return nil end
+    for _, part in player:GetChildren() do
+        if part:IsA("BasePart") then
+            local mesh = part:FindFirstChildOfClass("SpecialMesh")
+            if mesh and mesh.MeshId == targetMeshId then
+                return part
+            end
+        end
+    end
+end
+
+function Utils.getBodyParts(player)
+    local parts = {}
+    for _, part in player:GetChildren() do
+        if part:IsA("BasePart") then
+            local mesh = part:FindFirstChildOfClass("SpecialMesh")
+            if mesh and TargetMeshIds[mesh.MeshId] then
+                table.insert(parts, part)
+            end
+        end
+    end
+    return parts
+end
+
+function Utils.getClosestPlayer(useFOV, hitPart)
+    local Settings = getgenv().Settings
+    useFOV = useFOV == nil and Settings.SilentAim.UseFOV or useFOV
+    local closestPart, shortestDist = nil, math.huge
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    
+    for _, player in Utils.getPlayers() do
+        if not player:IsDescendantOf(workspace.Ignore.DeadBody) then
+            local ally = Utils.isAlly(player)
+            if not (Settings.Chams.TeamCheck and ally) then
+                local partsToCheck
+                if hitPart == "Closest Part" then
+                    partsToCheck = Utils.getBodyParts(player)
+                else
+                    local singlePart = Utils.getBodyPart(player, hitPart)
+                    partsToCheck = singlePart and {singlePart} or {}
+                end
+                for _, part in ipairs(partsToCheck) do
+                    if part then
+                        local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                        if onScreen then
+                            local distToCenter = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                            local distToCam = (part.Position - Camera.CFrame.Position).Magnitude
+                            if not (Settings.Aimbot.MaxDistance.Enabled and distToCam > Settings.Aimbot.MaxDistance.Value) then
+                                if useFOV and Settings.FOV.Enabled then
+                                    if distToCenter <= Settings.FOV.Radius then
+                                        if distToCam <= 30 then return part end
+                                        if distToCenter < shortestDist then
+                                            closestPart = part
+                                            shortestDist = distToCenter
+                                        end
+                                    end
+                                else
+                                    if distToCam <= 30 then return part end
+                                    if distToCenter < shortestDist then
+                                        closestPart = part
+                                        shortestDist = distToCenter
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return closestPart
+end
+
+function Utils.isVisible(part, check)
+    if check then
+        local hit = workspace:FindPartOnRayWithIgnoreList(Ray.new(Camera.CFrame.Position, (part.Position - Camera.CFrame.Position).Unit * 1000), {Players.LocalPlayer.Character}, false, true)
+        return hit == part
+    end
+    return true
+end
+
+function Utils.safeMouseMoveRel(x, y)
+    pcall(mousemoverel, x, y)
+end
