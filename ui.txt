@@ -1,5 +1,11 @@
 -- UI Script for Astralis
 -- Load the UI library
+local Library = loadstring(
+    game:HttpGet(
+        'https://raw.githubusercontent.com/bottomnoah/UI/refs/heads/main/cola.lua'
+    )
+)()
+
 
 -- Access global Settings and functions from the main script
 local Settings = getgenv().Settings
