@@ -204,15 +204,25 @@ ThirdPersonGroup:AddToggle({
     Value = Settings.ThirdPerson.Enabled,
     Callback = function(s)
         Settings.ThirdPerson.Enabled = s
-        if getgenv().charInterface and getgenv().charInterface.isAlive() and Settings.ThirdPerson.ShowCharacter then
+        if charInterface.isAlive() and Settings.ThirdPerson.ShowCharacter then
             if s then
-                getgenv().started = true
+                local classData = playerClient.getPlayerData().settings.classdata
+                fakeRepObject._player = localplayer
+                fakeRepObject:spawn(nil, classData[classData.curclass])
+                currentObj = fakeRepObject._thirdPersonObject
+                fakeRepObject:setActiveIndex(1)
+                for i = 1, 3 do
+                    if fakeRepObject:getWeaponObjects()[i] then
+                        currentObj:buildWeapon(i)
+                    end
+                end
+                started = false
             else
-                getgenv().fakeRepObject:despawn()
-                if getgenv().currentObj then
-                    getgenv().currentObj:Destroy()
-                    getgenv().currentObj = nil
-                    getgenv().lastPos = nil
+                fakeRepObject:despawn()
+                if currentObj then
+                    currentObj:Destroy()
+                    currentObj = nil
+                    lastPos = nil
                 end
             end
         end
