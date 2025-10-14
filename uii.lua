@@ -8,7 +8,7 @@ local library = loadstring(
 -- Access global Settings and functions from the main script
 local Settings = getgenv().Settings
 if not Settings then
-    error("Settings table not found. Ensure the main script is loaded first.")
+    error('Settings table not found. Ensure the main script is loaded first.')
 end
 
 -- Create Window
@@ -17,7 +17,7 @@ local Window = Library:CreateWindow({
     Center = true,
     AutoShow = true,
     TabPadding = 8,
-    MenuFadeTime = 0.2
+    MenuFadeTime = 0.2,
 })
 
 -- Define Tabs
@@ -27,7 +27,7 @@ local Tabs = {
     Visuals = Window:AddTab('Visuals'),
     Player = Window:AddTab('Player'),
     Misc = Window:AddTab('Misc'),
-    ['UI Settings'] = Window:AddTab('UI Settings')
+    ['UI Settings'] = Window:AddTab('UI Settings'),
 }
 
 -- Gun Modifications Section
@@ -40,7 +40,7 @@ GunModsGroup:AddSlider('NoRecoil', {
     Rounding = 0,
     Callback = function(v)
         Settings.GunMods.NoRecoil = v
-    end
+    end,
 })
 
 GunModsGroup:AddToggle('NoSpread', {
@@ -48,7 +48,7 @@ GunModsGroup:AddToggle('NoSpread', {
     Default = Settings.GunMods.NoSpread,
     Callback = function(s)
         Settings.GunMods.NoSpread = s
-    end
+    end,
 })
 
 GunModsGroup:AddToggle('NoSway', {
@@ -56,7 +56,7 @@ GunModsGroup:AddToggle('NoSway', {
     Default = Settings.GunMods.NoSway,
     Callback = function(s)
         Settings.GunMods.NoSway = s
-    end
+    end,
 })
 
 GunModsGroup:AddToggle('NoSniperScope', {
@@ -64,7 +64,7 @@ GunModsGroup:AddToggle('NoSniperScope', {
     Default = Settings.GunMods.NoSniperScope,
     Callback = function(s)
         Settings.GunMods.NoSniperScope = s
-    end
+    end,
 })
 
 GunModsGroup:AddToggle('InstantReload', {
@@ -72,7 +72,7 @@ GunModsGroup:AddToggle('InstantReload', {
     Default = Settings.GunMods.InstantReload,
     Callback = function(s)
         Settings.GunMods.InstantReload = s
-    end
+    end,
 })
 
 GunModsGroup:AddToggle('AutoReload', {
@@ -80,7 +80,7 @@ GunModsGroup:AddToggle('AutoReload', {
     Default = Settings.GunMods.AutoReload,
     Callback = function(s)
         Settings.GunMods.AutoReload = s
-    end
+    end,
 })
 
 GunModsGroup:AddToggle('NoWalkSway', {
@@ -88,7 +88,7 @@ GunModsGroup:AddToggle('NoWalkSway', {
     Default = Settings.GunMods.NoWalkSway,
     Callback = function(s)
         Settings.GunMods.NoWalkSway = s
-    end
+    end,
 })
 
 -- Camera Modifications Section
@@ -98,7 +98,7 @@ CamModsGroup:AddToggle('NoCameraBob', {
     Default = Settings.GunMods.NoCameraBob,
     Callback = function(s)
         Settings.GunMods.NoCameraBob = s
-    end
+    end,
 })
 
 -- Crosshair Section
@@ -109,7 +109,7 @@ CrosshairGroup:AddToggle('CrosshairEnabled', {
     Callback = function(s)
         Settings.Crosshair.Enabled = s
         getgenv().toggleCrosshair(s)
-    end
+    end,
 })
 
 CrosshairGroup:AddDropdown('CrosshairStyle', {
@@ -118,7 +118,7 @@ CrosshairGroup:AddDropdown('CrosshairStyle', {
     Default = Settings.Crosshair.TStyle,
     Callback = function(v)
         Settings.Crosshair.TStyle = v
-    end
+    end,
 })
 
 CrosshairGroup:AddToggle('CrosshairDot', {
@@ -126,7 +126,7 @@ CrosshairGroup:AddToggle('CrosshairDot', {
     Default = Settings.Crosshair.Dot,
     Callback = function(s)
         Settings.Crosshair.Dot = s
-    end
+    end,
 })
 
 CrosshairGroup:AddSlider('CrosshairSize', {
@@ -137,7 +137,7 @@ CrosshairGroup:AddSlider('CrosshairSize', {
     Rounding = 0,
     Callback = function(v)
         Settings.Crosshair.Size = v
-    end
+    end,
 })
 
 CrosshairGroup:AddSlider('CrosshairThickness', {
@@ -148,7 +148,7 @@ CrosshairGroup:AddSlider('CrosshairThickness', {
     Rounding = 0,
     Callback = function(v)
         Settings.Crosshair.Thickness = v
-    end
+    end,
 })
 
 CrosshairGroup:AddSlider('CrosshairGap', {
@@ -159,7 +159,7 @@ CrosshairGroup:AddSlider('CrosshairGap', {
     Rounding = 0,
     Callback = function(v)
         Settings.Crosshair.Gap = v
-    end
+    end,
 })
 
 CrosshairGroup:AddLabel('Color'):AddColorPicker('CrosshairColor', {
@@ -167,7 +167,7 @@ CrosshairGroup:AddLabel('Color'):AddColorPicker('CrosshairColor', {
     Transparency = 0,
     Callback = function(v)
         Settings.Crosshair.Color = v
-    end
+    end,
 })
 
 CrosshairGroup:AddSlider('CrosshairTransparency', {
@@ -178,7 +178,7 @@ CrosshairGroup:AddSlider('CrosshairTransparency', {
     Rounding = 2,
     Callback = function(v)
         Settings.Crosshair.Transparency = v
-    end
+    end,
 })
 
 -- Third Person Section
@@ -200,7 +200,7 @@ ThirdPersonGroup:AddToggle('ThirdPersonEnabled', {
                 end
             end
         end
-    end
+    end,
 })
 
 ThirdPersonGroup:AddToggle('ThirdPersonShowCharacter', {
@@ -208,7 +208,11 @@ ThirdPersonGroup:AddToggle('ThirdPersonShowCharacter', {
     Default = Settings.ThirdPerson.ShowCharacter,
     Callback = function(s)
         Settings.ThirdPerson.ShowCharacter = s
-        if getgenv().charInterface and getgenv().charInterface.isAlive() and Settings.ThirdPerson.Enabled then
+        if
+            getgenv().charInterface
+            and getgenv().charInterface.isAlive()
+            and Settings.ThirdPerson.Enabled
+        then
             if s then
                 getgenv().started = true
             else
@@ -220,7 +224,7 @@ ThirdPersonGroup:AddToggle('ThirdPersonShowCharacter', {
                 end
             end
         end
-    end
+    end,
 })
 
 ThirdPersonGroup:AddToggle('ThirdPersonShowCharacterWhileAiming', {
@@ -228,7 +232,7 @@ ThirdPersonGroup:AddToggle('ThirdPersonShowCharacterWhileAiming', {
     Default = Settings.ThirdPerson.ShowCharacterWhileAiming,
     Callback = function(s)
         Settings.ThirdPerson.ShowCharacterWhileAiming = s
-    end
+    end,
 })
 
 ThirdPersonGroup:AddToggle('ThirdPersonCameraOffsetAlwaysVisible', {
@@ -236,7 +240,7 @@ ThirdPersonGroup:AddToggle('ThirdPersonCameraOffsetAlwaysVisible', {
     Default = Settings.ThirdPerson.CameraOffsetAlwaysVisible,
     Callback = function(s)
         Settings.ThirdPerson.CameraOffsetAlwaysVisible = s
-    end
+    end,
 })
 
 ThirdPersonGroup:AddToggle('ThirdPersonHideViewmodel', {
@@ -244,7 +248,7 @@ ThirdPersonGroup:AddToggle('ThirdPersonHideViewmodel', {
     Default = Settings.ThirdPerson.HideViewmodel,
     Callback = function(s)
         Settings.ThirdPerson.HideViewmodel = s
-    end
+    end,
 })
 
 ThirdPersonGroup:AddSlider('ThirdPersonCameraOffsetX', {
@@ -255,7 +259,7 @@ ThirdPersonGroup:AddSlider('ThirdPersonCameraOffsetX', {
     Rounding = 1,
     Callback = function(v)
         Settings.ThirdPerson.CameraOffsetX = v
-    end
+    end,
 })
 
 ThirdPersonGroup:AddSlider('ThirdPersonCameraOffsetY', {
@@ -266,7 +270,7 @@ ThirdPersonGroup:AddSlider('ThirdPersonCameraOffsetY', {
     Rounding = 1,
     Callback = function(v)
         Settings.ThirdPerson.CameraOffsetY = v
-    end
+    end,
 })
 
 ThirdPersonGroup:AddSlider('ThirdPersonCameraOffsetZ', {
@@ -277,7 +281,7 @@ ThirdPersonGroup:AddSlider('ThirdPersonCameraOffsetZ', {
     Rounding = 1,
     Callback = function(v)
         Settings.ThirdPerson.CameraOffsetZ = v
-    end
+    end,
 })
 
 -- Aimbot Section
@@ -293,7 +297,10 @@ AimbotGroup:AddToggle('AimbotEnabled', {
                 function(i)
                     if i.UserInputType == Enum.UserInputType.MouseButton2 then
                         getgenv().State.IsRightClickHeld = true
-                        getgenv().State.TargetPart = getgenv().getClosestPlayer(nil, Settings.Aimbot.HitPart)
+                        getgenv().State.TargetPart = getgenv().getClosestPlayer(
+                            nil,
+                            Settings.Aimbot.HitPart
+                        )
                     end
                 end
             )
@@ -307,9 +314,17 @@ AimbotGroup:AddToggle('AimbotEnabled', {
             )
             getgenv().State.RenderSteppedConnection = getgenv().RunService.RenderStepped:Connect(
                 function()
-                    if getgenv().State.IsRightClickHeld and getgenv().State.TargetPart then
+                    if
+                        getgenv().State.IsRightClickHeld
+                        and getgenv().State.TargetPart
+                    then
                         if Settings.Aimbot.WallCheck then
-                            if getgenv().isVisible(getgenv().State.TargetPart, true) then
+                            if
+                                getgenv().isVisible(
+                                    getgenv().State.TargetPart,
+                                    true
+                                )
+                            then
                                 getgenv().aimAt()
                             end
                         else
@@ -330,7 +345,7 @@ AimbotGroup:AddToggle('AimbotEnabled', {
                 getgenv().State.RenderSteppedConnection:Disconnect()
             end
         end
-    end
+    end,
 })
 
 AimbotGroup:AddDropdown('AimbotHitPart', {
@@ -339,7 +354,7 @@ AimbotGroup:AddDropdown('AimbotHitPart', {
     Default = Settings.Aimbot.HitPart,
     Callback = function(v)
         Settings.Aimbot.HitPart = v
-    end
+    end,
 })
 
 AimbotGroup:AddToggle('AimbotWallCheck', {
@@ -347,7 +362,7 @@ AimbotGroup:AddToggle('AimbotWallCheck', {
     Default = Settings.Aimbot.WallCheck,
     Callback = function(s)
         Settings.Aimbot.WallCheck = s
-    end
+    end,
 })
 
 AimbotGroup:AddToggle('AimbotAutoTargetSwitch', {
@@ -355,7 +370,7 @@ AimbotGroup:AddToggle('AimbotAutoTargetSwitch', {
     Default = Settings.Aimbot.AutoTargetSwitch,
     Callback = function(s)
         Settings.Aimbot.AutoTargetSwitch = s
-    end
+    end,
 })
 
 AimbotGroup:AddToggle('AimbotMaxDistanceEnabled', {
@@ -363,7 +378,7 @@ AimbotGroup:AddToggle('AimbotMaxDistanceEnabled', {
     Default = Settings.Aimbot.MaxDistance.Enabled,
     Callback = function(s)
         Settings.Aimbot.MaxDistance.Enabled = s
-    end
+    end,
 })
 
 AimbotGroup:AddSlider('AimbotMaxDistance', {
@@ -374,7 +389,7 @@ AimbotGroup:AddSlider('AimbotMaxDistance', {
     Rounding = 0,
     Callback = function(v)
         Settings.Aimbot.MaxDistance.Value = v
-    end
+    end,
 })
 
 AimbotGroup:AddSlider('AimbotEasingStrength', {
@@ -386,11 +401,11 @@ AimbotGroup:AddSlider('AimbotEasingStrength', {
     Callback = function(v)
         Settings.Aimbot.Easing.Strength = v
         getgenv().updateSensitivity(v)
-    end
+    end,
 })
 
 -- Silent Aim Section
-local SilentAimGroup = Tabs.Main:AddRightGroupbox('Silent Aim')
+local SilentAimGroup = Tabs.Main:AddLeftGroupbox('Silent Aim')
 SilentAimGroup:AddToggle('SilentAimEnabled', {
     Text = 'Enabled',
     Default = Settings.SilentAim.Enabled,
@@ -399,7 +414,7 @@ SilentAimGroup:AddToggle('SilentAimEnabled', {
         if s then
             getgenv().initializeSilentAim()
         end
-    end
+    end,
 })
 
 SilentAimGroup:AddDropdown('SilentAimHitPart', {
@@ -408,7 +423,7 @@ SilentAimGroup:AddDropdown('SilentAimHitPart', {
     Default = Settings.SilentAim.HitPart,
     Callback = function(v)
         Settings.SilentAim.HitPart = v
-    end
+    end,
 })
 
 SilentAimGroup:AddSlider('SilentAimHitChance', {
@@ -419,7 +434,7 @@ SilentAimGroup:AddSlider('SilentAimHitChance', {
     Rounding = 0,
     Callback = function(v)
         Settings.SilentAim.HitChance = v
-    end
+    end,
 })
 
 SilentAimGroup:AddToggle('SilentAimUseFOV', {
@@ -427,7 +442,7 @@ SilentAimGroup:AddToggle('SilentAimUseFOV', {
     Default = Settings.SilentAim.UseFOV,
     Callback = function(s)
         Settings.SilentAim.UseFOV = s
-    end
+    end,
 })
 
 SilentAimGroup:AddToggle('SilentAimWallCheck', {
@@ -435,7 +450,7 @@ SilentAimGroup:AddToggle('SilentAimWallCheck', {
     Default = Settings.SilentAim.WallCheck,
     Callback = function(s)
         Settings.SilentAim.WallCheck = s
-    end
+    end,
 })
 
 SilentAimGroup:AddToggle('SnaplineEnabled', {
@@ -444,7 +459,10 @@ SilentAimGroup:AddToggle('SnaplineEnabled', {
     Callback = function(s)
         Settings.Snapline.Enabled = s
         if s then
-            getgenv().State.SnaplineUpdate = getgenv().RunService.RenderStepped:Connect(getgenv().updateSnapline)
+            getgenv().State.SnaplineUpdate =
+                getgenv().RunService.RenderStepped:Connect(
+                    getgenv().updateSnapline
+                )
         else
             if getgenv().State.SnaplineUpdate then
                 getgenv().State.SnaplineUpdate:Disconnect()
@@ -452,17 +470,17 @@ SilentAimGroup:AddToggle('SnaplineEnabled', {
             end
             Settings.Snapline.Line.Visible = false
         end
-    end
+    end,
 })
 
 -- Force Hit Section
-local ForceHitGroup = Tabs.Main:AddRightGroupbox('Force Hit')
+local ForceHitGroup = Tabs.Main:AddLeftGroupbox('Force Hit')
 ForceHitGroup:AddToggle('ForceHitEnabled', {
     Text = 'Enabled',
     Default = Settings.ForceHit.Enabled,
     Callback = function(s)
         Settings.ForceHit.Enabled = s
-    end
+    end,
 })
 
 ForceHitGroup:AddDropdown('ForceHitHitPart', {
@@ -471,7 +489,7 @@ ForceHitGroup:AddDropdown('ForceHitHitPart', {
     Default = Settings.ForceHit.HitPart,
     Callback = function(v)
         Settings.ForceHit.HitPart = v
-    end
+    end,
 })
 
 ForceHitGroup:AddToggle('ForceHitUseFOV', {
@@ -479,7 +497,7 @@ ForceHitGroup:AddToggle('ForceHitUseFOV', {
     Default = Settings.ForceHit.UseFOV,
     Callback = function(s)
         Settings.ForceHit.UseFOV = s
-    end
+    end,
 })
 
 -- ESP Section
@@ -491,16 +509,21 @@ ESPGroup:AddToggle('ESPEnabled', {
         Settings.ESP.Enabled = s
         if s then
             getgenv().initializeESP()
-            getgenv().State.PlayerCacheUpdate = getgenv().RunService.Heartbeat:Connect(getgenv().updatePlayerCache)
+            getgenv().State.PlayerCacheUpdate =
+                getgenv().RunService.Heartbeat:Connect(
+                    getgenv().updatePlayerCache
+                )
             local last = tick()
             local interval = 1 / 240
-            getgenv().State.ESPLoop = getgenv().RunService.Heartbeat:Connect(function()
-                local now = tick()
-                if now - last >= interval then
-                    getgenv().renderESP()
-                    last = now
+            getgenv().State.ESPLoop = getgenv().RunService.Heartbeat:Connect(
+                function()
+                    local now = tick()
+                    if now - last >= interval then
+                        getgenv().renderESP()
+                        last = now
+                    end
                 end
-            end)
+            )
         else
             if getgenv().State.PlayerCacheUpdate then
                 getgenv().State.PlayerCacheUpdate:Disconnect()
@@ -514,7 +537,7 @@ ESPGroup:AddToggle('ESPEnabled', {
             getgenv().State.PlayersToDraw = {}
             getgenv().State.CachedProperties = {}
         end
-    end
+    end,
 })
 
 local function updateESPFeature(f, s)
@@ -527,7 +550,7 @@ ESPGroup:AddToggle('ESPBox', {
     Default = Settings.ESP.Features.Box.Enabled,
     Callback = function(s)
         updateESPFeature('Box', s)
-    end
+    end,
 })
 
 ESPGroup:AddToggle('ESPTracer', {
@@ -535,7 +558,7 @@ ESPGroup:AddToggle('ESPTracer', {
     Default = Settings.ESP.Features.Tracer.Enabled,
     Callback = function(s)
         updateESPFeature('Tracer', s)
-    end
+    end,
 })
 
 ESPGroup:AddToggle('ESPHeadDot', {
@@ -543,7 +566,7 @@ ESPGroup:AddToggle('ESPHeadDot', {
     Default = Settings.ESP.Features.HeadDot.Enabled,
     Callback = function(s)
         updateESPFeature('HeadDot', s)
-    end
+    end,
 })
 
 ESPGroup:AddToggle('ESPDistance', {
@@ -551,7 +574,7 @@ ESPGroup:AddToggle('ESPDistance', {
     Default = Settings.ESP.Features.DistanceText.Enabled,
     Callback = function(s)
         updateESPFeature('DistanceText', s)
-    end
+    end,
 })
 
 ESPGroup:AddToggle('ESPName', {
@@ -559,7 +582,7 @@ ESPGroup:AddToggle('ESPName', {
     Default = Settings.ESP.Features.Name.Enabled,
     Callback = function(s)
         updateESPFeature('Name', s)
-    end
+    end,
 })
 
 ESPGroup:AddToggle('ESPVisibilityCheck', {
@@ -567,7 +590,7 @@ ESPGroup:AddToggle('ESPVisibilityCheck', {
     Default = Settings.ESP.VisibilityCheck,
     Callback = function(s)
         Settings.ESP.VisibilityCheck = s
-    end
+    end,
 })
 
 -- ESP Colors Section
@@ -593,35 +616,35 @@ ESPCustomization:AddLabel('Box Color'):AddColorPicker('ESPBoxColor', {
     Default = Settings.ESP.Features.Box.Color,
     Callback = function(v)
         updateESPColor('Box', v)
-    end
+    end,
 })
 
 ESPCustomization:AddLabel('Tracer Color'):AddColorPicker('ESPTracerColor', {
     Default = Settings.ESP.Features.Tracer.Color,
     Callback = function(v)
         updateESPColor('Tracer', v)
-    end
+    end,
 })
 
 ESPCustomization:AddLabel('Distance Color'):AddColorPicker('ESPDistanceColor', {
     Default = Settings.ESP.Features.DistanceText.Color,
     Callback = function(v)
         updateESPColor('DistanceText', v)
-    end
+    end,
 })
 
 ESPCustomization:AddLabel('Head Dot Color'):AddColorPicker('ESPHeadDotColor', {
     Default = Settings.ESP.Features.HeadDot.Color,
     Callback = function(v)
         updateESPColor('HeadDot', v)
-    end
+    end,
 })
 
 ESPCustomization:AddLabel('Name Color'):AddColorPicker('ESPNameColor', {
     Default = Settings.ESP.Features.Name.Color,
     Callback = function(v)
         updateESPColor('Name', v)
-    end
+    end,
 })
 
 ESPGroup:AddToggle('ESPHealthBar', {
@@ -637,32 +660,34 @@ ESPGroup:AddToggle('ESPHealthBar', {
                 c.HealthBarForeground.Visible = s
             end
         end
-    end
+    end,
 })
 
-ESPCustomization:AddLabel('Health Bar Color'):AddColorPicker('ESPHealthBarColor', {
-    Default = Settings.ESP.Features.HealthBar.Color,
-    Callback = function(v)
-        Settings.ESP.Features.HealthBar.Color = v
-        for _, cache in getgenv().State.Storage.ESPCache do
-            if cache.HealthBarForeground then
-                cache.HealthBarForeground.Color = v
+ESPCustomization:AddLabel('Health Bar Color')
+    :AddColorPicker('ESPHealthBarColor', {
+        Default = Settings.ESP.Features.HealthBar.Color,
+        Callback = function(v)
+            Settings.ESP.Features.HealthBar.Color = v
+            for _, cache in getgenv().State.Storage.ESPCache do
+                if cache.HealthBarForeground then
+                    cache.HealthBarForeground.Color = v
+                end
             end
-        end
-    end
-})
+        end,
+    })
 
-ESPCustomization:AddLabel('Health Bar Background'):AddColorPicker('ESPHealthBarBG', {
-    Default = Settings.ESP.Features.HealthBar.BackgroundColor,
-    Callback = function(v)
-        Settings.ESP.Features.HealthBar.BackgroundColor = v
-        for _, cache in getgenv().State.Storage.ESPCache do
-            if cache.HealthBarBackground then
-                cache.HealthBarBackground.Color = v
+ESPCustomization:AddLabel('Health Bar Background')
+    :AddColorPicker('ESPHealthBarBG', {
+        Default = Settings.ESP.Features.HealthBar.BackgroundColor,
+        Callback = function(v)
+            Settings.ESP.Features.HealthBar.BackgroundColor = v
+            for _, cache in getgenv().State.Storage.ESPCache do
+                if cache.HealthBarBackground then
+                    cache.HealthBarBackground.Color = v
+                end
             end
-        end
-    end
-})
+        end,
+    })
 
 ESPCustomization:AddLabel('Snapline Color'):AddColorPicker('SnaplineColor', {
     Default = Settings.Snapline.Color,
@@ -670,7 +695,7 @@ ESPCustomization:AddLabel('Snapline Color'):AddColorPicker('SnaplineColor', {
     Callback = function(v)
         Settings.Snapline.Color = v
         Settings.Snapline.Line.Color = v
-    end
+    end,
 })
 
 ESPCustomization:AddSlider('SnaplineThickness', {
@@ -682,7 +707,7 @@ ESPCustomization:AddSlider('SnaplineThickness', {
     Callback = function(v)
         Settings.Snapline.Thickness = v
         Settings.Snapline.Line.Thickness = v
-    end
+    end,
 })
 
 ESPCustomization:AddSlider('SnaplineTransparency', {
@@ -694,11 +719,12 @@ ESPCustomization:AddSlider('SnaplineTransparency', {
     Callback = function(v)
         Settings.Snapline.Transparency = v
         Settings.Snapline.Line.Transparency = v
-    end
+    end,
 })
 
 -- Health Bar Settings Section
-local HealthBarCustomization = Tabs.Visuals:AddRightGroupbox('Health Bar Settings')
+local HealthBarCustomization =
+    Tabs.Visuals:AddRightGroupbox('Health Bar Settings')
 HealthBarCustomization:AddSlider('ESPHealthBarWidth', {
     Text = 'Width',
     Default = Settings.ESP.Features.HealthBar.Width,
@@ -707,7 +733,7 @@ HealthBarCustomization:AddSlider('ESPHealthBarWidth', {
     Rounding = 0,
     Callback = function(v)
         Settings.ESP.Features.HealthBar.Width = v
-    end
+    end,
 })
 
 HealthBarCustomization:AddSlider('ESPHealthBarHeight', {
@@ -718,21 +744,22 @@ HealthBarCustomization:AddSlider('ESPHealthBarHeight', {
     Rounding = 0,
     Callback = function(v)
         Settings.ESP.Features.HealthBar.Height = v
-    end
+    end,
 })
 
-HealthBarCustomization:AddLabel('Outline Color'):AddColorPicker('ESPHealthBarOutlineColor', {
-    Default = Settings.ESP.Features.HealthBar.OutlineColor,
-    Transparency = 0.7,
-    Callback = function(v)
-        Settings.ESP.Features.HealthBar.OutlineColor = v
-        for _, cache in getgenv().State.Storage.ESPCache do
-            if cache.HealthBarOutline then
-                cache.HealthBarOutline.Color = v
+HealthBarCustomization:AddLabel('Outline Color')
+    :AddColorPicker('ESPHealthBarOutlineColor', {
+        Default = Settings.ESP.Features.HealthBar.OutlineColor,
+        Transparency = 0.7,
+        Callback = function(v)
+            Settings.ESP.Features.HealthBar.OutlineColor = v
+            for _, cache in getgenv().State.Storage.ESPCache do
+                if cache.HealthBarOutline then
+                    cache.HealthBarOutline.Color = v
+                end
             end
-        end
-    end
-})
+        end,
+    })
 
 -- Distance Settings Section
 local DistanceCustomization = Tabs.Visuals:AddRightGroupbox('Distance Settings')
@@ -742,7 +769,7 @@ DistanceCustomization:AddToggle('ESPMaxDistanceEnabled', {
     Callback = function(s)
         Settings.ESP.MaxDistance.Enabled = s
         getgenv().refreshPlayerCache()
-    end
+    end,
 })
 
 DistanceCustomization:AddSlider('ESPMaxDistance', {
@@ -754,7 +781,7 @@ DistanceCustomization:AddSlider('ESPMaxDistance', {
     Callback = function(v)
         Settings.ESP.MaxDistance.Value = v
         getgenv().refreshPlayerCache()
-    end
+    end,
 })
 
 -- FOV Section
@@ -766,7 +793,7 @@ FOVGroup:AddToggle('FOVEnabled', {
         Settings.FOV.Enabled = s
         Settings.FOV.Circle.Visible = s
         Settings.FOV.OutlineCircle.Visible = s
-    end
+    end,
 })
 
 FOVGroup:AddToggle('FOVFollowGun', {
@@ -774,7 +801,7 @@ FOVGroup:AddToggle('FOVFollowGun', {
     Default = Settings.FOV.FollowGun,
     Callback = function(s)
         Settings.FOV.FollowGun = s
-    end
+    end,
 })
 
 FOVGroup:AddToggle('FOVFilled', {
@@ -783,13 +810,15 @@ FOVGroup:AddToggle('FOVFilled', {
     Callback = function(s)
         Settings.FOV.Filled = s
         Settings.FOV.Circle.Filled = s
-        Settings.FOV.Circle.Color = s and Settings.FOV.FillColor or Settings.FOV.OutlineColor
-        Settings.FOV.Circle.Transparency = s and Settings.FOV.FillTransparency or Settings.FOV.OutlineTransparency
+        Settings.FOV.Circle.Color = s and Settings.FOV.FillColor
+            or Settings.FOV.OutlineColor
+        Settings.FOV.Circle.Transparency = s and Settings.FOV.FillTransparency
+            or Settings.FOV.OutlineTransparency
         Settings.FOV.Circle.Thickness = s and 0 or 1
         if Settings.FOV.Enabled then
             Settings.FOV.Circle.Visible = true
         end
-    end
+    end,
 })
 
 FOVGroup:AddLabel('Inline Color'):AddColorPicker('FOVFillColor', {
@@ -800,7 +829,7 @@ FOVGroup:AddLabel('Inline Color'):AddColorPicker('FOVFillColor', {
         if Settings.FOV.Filled then
             Settings.FOV.Circle.Color = v
         end
-    end
+    end,
 })
 
 FOVGroup:AddSlider('FOVFillTransparency', {
@@ -814,7 +843,7 @@ FOVGroup:AddSlider('FOVFillTransparency', {
         if Settings.FOV.Filled then
             Settings.FOV.Circle.Transparency = v
         end
-    end
+    end,
 })
 
 FOVGroup:AddLabel('Outline Color'):AddColorPicker('FOVOutlineColor', {
@@ -826,7 +855,7 @@ FOVGroup:AddLabel('Outline Color'):AddColorPicker('FOVOutlineColor', {
         if not Settings.FOV.Filled then
             Settings.FOV.Circle.Color = v
         end
-    end
+    end,
 })
 
 FOVGroup:AddSlider('FOVOutlineTransparency', {
@@ -841,7 +870,7 @@ FOVGroup:AddSlider('FOVOutlineTransparency', {
         if not Settings.FOV.Filled then
             Settings.FOV.Circle.Transparency = v
         end
-    end
+    end,
 })
 
 FOVGroup:AddSlider('FOVRadius', {
@@ -855,7 +884,7 @@ FOVGroup:AddSlider('FOVRadius', {
         Settings.FOV.Circle.Radius = v
         Settings.FOV.OutlineCircle.Radius = v
         getgenv().State.ogRadius = { v, v, v }
-    end
+    end,
 })
 
 FOVGroup:AddToggle('FOVDynamic', {
@@ -863,7 +892,7 @@ FOVGroup:AddToggle('FOVDynamic', {
     Default = Settings.FOV.Dynamic,
     Callback = function(s)
         Settings.FOV.Dynamic = s
-    end
+    end,
 })
 
 -- Chams Section
@@ -874,7 +903,10 @@ ChamsGroup:AddToggle('ChamsEnabled', {
     Callback = function(s)
         Settings.Chams.Enabled = s
         if s then
-            getgenv().State.ChamsUpdateConnection = getgenv().RunService.RenderStepped:Connect(getgenv().updateChams)
+            getgenv().State.ChamsUpdateConnection =
+                getgenv().RunService.RenderStepped:Connect(
+                    getgenv().updateChams
+                )
         else
             if getgenv().State.ChamsUpdateConnection then
                 getgenv().State.ChamsUpdateConnection:Disconnect()
@@ -884,7 +916,7 @@ ChamsGroup:AddToggle('ChamsEnabled', {
                 getgenv().removeHighlight(p)
             end
         end
-    end
+    end,
 })
 
 ChamsGroup:AddLabel('Fill Color'):AddColorPicker('ChamsFillColor', {
@@ -895,7 +927,7 @@ ChamsGroup:AddLabel('Fill Color'):AddColorPicker('ChamsFillColor', {
         for _, h in getgenv().State.Highlights do
             h.FillColor = v
         end
-    end
+    end,
 })
 
 ChamsGroup:AddLabel('Outline Color'):AddColorPicker('ChamsOutlineColor', {
@@ -906,7 +938,7 @@ ChamsGroup:AddLabel('Outline Color'):AddColorPicker('ChamsOutlineColor', {
         for _, h in getgenv().State.Highlights do
             h.OutlineColor = v
         end
-    end
+    end,
 })
 
 ChamsGroup:AddSlider('ChamsFillTransparency', {
@@ -920,7 +952,7 @@ ChamsGroup:AddSlider('ChamsFillTransparency', {
         for _, h in getgenv().State.Highlights do
             h.FillTransparency = v
         end
-    end
+    end,
 })
 
 ChamsGroup:AddSlider('ChamsOutlineTransparency', {
@@ -934,7 +966,7 @@ ChamsGroup:AddSlider('ChamsOutlineTransparency', {
         for _, h in getgenv().State.Highlights do
             h.OutlineTransparency = v
         end
-    end
+    end,
 })
 
 -- Player Section
@@ -944,7 +976,7 @@ PlayerGroup:AddToggle('BhopEnabled', {
     Default = Settings.Player.Bhop.Enabled,
     Callback = function(s)
         Settings.Player.Bhop.Enabled = s
-    end
+    end,
 })
 
 PlayerGroup:AddToggle('WalkSpeedEnabled', {
@@ -953,7 +985,7 @@ PlayerGroup:AddToggle('WalkSpeedEnabled', {
     Callback = function(s)
         Settings.Player.WalkSpeed.Enabled = s
         getgenv().callbackList['Player%%WalkSpeed'](s)
-    end
+    end,
 })
 
 PlayerGroup:AddSlider('WalkSpeedValue', {
@@ -967,7 +999,7 @@ PlayerGroup:AddSlider('WalkSpeedValue', {
         if Settings.Player.WalkSpeed.Enabled then
             getgenv().callbackList['Player%%WalkSpeedValue'](v)
         end
-    end
+    end,
 })
 
 PlayerGroup:AddToggle('JumpPowerEnabled', {
@@ -975,7 +1007,7 @@ PlayerGroup:AddToggle('JumpPowerEnabled', {
     Default = Settings.Player.JumpPower.Enabled,
     Callback = function(s)
         Settings.Player.JumpPower.Enabled = s
-    end
+    end,
 })
 
 PlayerGroup:AddSlider('JumpPowerValue', {
@@ -986,7 +1018,7 @@ PlayerGroup:AddSlider('JumpPowerValue', {
     Rounding = 0,
     Callback = function(v)
         Settings.Player.JumpPower.Value = v
-    end
+    end,
 })
 
 -- Anti-Aim Section
@@ -999,24 +1031,34 @@ AntiAimGroup:AddToggle('AntiAimEnabled', {
         getgenv().startTime = os.clock()
         getgenv().lastFrameTime = nil
         if s then
-            getgenv().State.AntiAimConnection = getgenv().RunService.Heartbeat:Connect(function()
-                if Settings.AntiAim.Enabled and getgenv().charInterface.isAlive() then
-                    local currentCharObject = getgenv().charInterface.getCharacterObject()
-                    if currentCharObject then
-                        local rootPart = currentCharObject:getRealRootPart()
-                        if rootPart then
-                            local angles = getgenv().cameraInterface:getActiveCamera():getAngles()
-                            local modifiedAngles = getgenv().applyAAAngles(angles)
+            getgenv().State.AntiAimConnection = getgenv().RunService.Heartbeat:Connect(
+                function()
+                    if
+                        Settings.AntiAim.Enabled
+                        and getgenv().charInterface.isAlive()
+                    then
+                        local currentCharObject =
+                            getgenv().charInterface.getCharacterObject()
+                        if currentCharObject then
+                            local rootPart = currentCharObject:getRealRootPart()
+                            if rootPart then
+                                local angles = getgenv().cameraInterface
+                                    :getActiveCamera()
+                                    :getAngles()
+                                local modifiedAngles =
+                                    getgenv().applyAAAngles(angles)
+                            end
                         end
                     end
                 end
-            end)
+            )
         else
             if getgenv().State.AntiAimConnection then
                 getgenv().State.AntiAimConnection:Disconnect()
                 getgenv().State.AntiAimConnection = nil
             end
-            local currentCharObject = getgenv().charInterface.getCharacterObject()
+            local currentCharObject =
+                getgenv().charInterface.getCharacterObject()
             if currentCharObject then
                 currentCharObject:setStance('stand')
                 getgenv().network:send('stance', 'stand')
@@ -1025,7 +1067,7 @@ AntiAimGroup:AddToggle('AntiAimEnabled', {
                 end
             end
         end
-    end
+    end,
 })
 
 AntiAimGroup:AddDropdown('AntiAimMode', {
@@ -1034,7 +1076,7 @@ AntiAimGroup:AddDropdown('AntiAimMode', {
     Default = Settings.AntiAim.Mode,
     Callback = function(v)
         Settings.AntiAim.Mode = v
-    end
+    end,
 })
 
 AntiAimGroup:AddSlider('AntiAimSpinSpeed', {
@@ -1045,7 +1087,7 @@ AntiAimGroup:AddSlider('AntiAimSpinSpeed', {
     Rounding = 0,
     Callback = function(v)
         Settings.AntiAim.SpinSpeed = v
-    end
+    end,
 })
 
 AntiAimGroup:AddSlider('AntiAimJitterAngle', {
@@ -1056,7 +1098,7 @@ AntiAimGroup:AddSlider('AntiAimJitterAngle', {
     Rounding = 0,
     Callback = function(v)
         Settings.AntiAim.JitterAngle = v
-    end
+    end,
 })
 
 AntiAimGroup:AddSlider('AntiAimStaticAngle', {
@@ -1067,7 +1109,7 @@ AntiAimGroup:AddSlider('AntiAimStaticAngle', {
     Rounding = 0,
     Callback = function(v)
         Settings.AntiAim.StaticAngle = v
-    end
+    end,
 })
 
 AntiAimGroup:AddDropdown('AntiAimPitchMode', {
@@ -1076,7 +1118,7 @@ AntiAimGroup:AddDropdown('AntiAimPitchMode', {
     Default = Settings.AntiAim.PitchMode,
     Callback = function(v)
         Settings.AntiAim.PitchMode = v
-    end
+    end,
 })
 
 AntiAimGroup:AddSlider('AntiAimPitchAngle', {
@@ -1087,7 +1129,7 @@ AntiAimGroup:AddSlider('AntiAimPitchAngle', {
     Rounding = 0,
     Callback = function(v)
         Settings.AntiAim.PitchAngle = v
-    end
+    end,
 })
 
 -- Rage Bot Section
@@ -1097,7 +1139,7 @@ RageBotGroup:AddToggle('RageBotEnabled', {
     Default = Settings.RageBot.Enabled,
     Callback = function(s)
         Settings.RageBot.Enabled = s
-    end
+    end,
 })
 
 RageBotGroup:AddToggle('RageBotFireRateBypass', {
@@ -1105,7 +1147,7 @@ RageBotGroup:AddToggle('RageBotFireRateBypass', {
     Default = Settings.RageBot.FireRateBypass,
     Callback = function(s)
         Settings.RageBot.FireRateBypass = s
-    end
+    end,
 })
 
 RageBotGroup:AddToggle('RageBotShootEffects', {
@@ -1113,7 +1155,7 @@ RageBotGroup:AddToggle('RageBotShootEffects', {
     Default = Settings.RageBot.ShootEffects,
     Callback = function(s)
         Settings.RageBot.ShootEffects = s
-    end
+    end,
 })
 
 RageBotGroup:AddToggle('RageBotFirePositionScanning', {
@@ -1121,7 +1163,7 @@ RageBotGroup:AddToggle('RageBotFirePositionScanning', {
     Default = Settings.RageBot.FirePositionScanning,
     Callback = function(s)
         Settings.RageBot.FirePositionScanning = s
-    end
+    end,
 })
 
 RageBotGroup:AddSlider('RageBotFirePositionOffset', {
@@ -1132,7 +1174,7 @@ RageBotGroup:AddSlider('RageBotFirePositionOffset', {
     Rounding = 1,
     Callback = function(v)
         Settings.RageBot.FirePositionOffset = v
-    end
+    end,
 })
 
 RageBotGroup:AddToggle('RageBotHitPositionScanning', {
@@ -1140,7 +1182,7 @@ RageBotGroup:AddToggle('RageBotHitPositionScanning', {
     Default = Settings.RageBot.HitPositionScanning,
     Callback = function(s)
         Settings.RageBot.HitPositionScanning = s
-    end
+    end,
 })
 
 RageBotGroup:AddSlider('RageBotHitPositionOffset', {
@@ -1151,7 +1193,7 @@ RageBotGroup:AddSlider('RageBotHitPositionOffset', {
     Rounding = 1,
     Callback = function(v)
         Settings.RageBot.HitPositionOffset = v
-    end
+    end,
 })
 
 -- Miscellaneous Section
@@ -1166,7 +1208,7 @@ Optimizations:AddToggle('MiscTextures', {
         else
             getgenv().revertMap()
         end
-    end
+    end,
 })
 
 -- Safety Section
@@ -1179,14 +1221,14 @@ Safety:AddToggle('VotekickRejoiner', {
         if s then
             getgenv().initializeVotekickRejoiner()
         end
-    end
+    end,
 })
 
 Safety:AddButton({
     Text = 'Rejoin',
     Func = function()
         getgenv().kickAndRejoin()
-    end
+    end,
 })
 
 -- ViewModel Chams Section
@@ -1197,16 +1239,17 @@ ViewModelChams:AddToggle('ViewModelChamsArmsEnabled', {
     Callback = function(enabled)
         Settings.ViewModelChams.Arms.Enabled = enabled
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
-ViewModelChams:AddLabel('Arms Color'):AddColorPicker('ViewModelChamsArmsColor', {
-    Default = Settings.ViewModelChams.Arms.Color,
-    Callback = function(color)
-        Settings.ViewModelChams.Arms.Color = color
-        getgenv().updateViewModelChams()
-    end
-})
+ViewModelChams:AddLabel('Arms Color')
+    :AddColorPicker('ViewModelChamsArmsColor', {
+        Default = Settings.ViewModelChams.Arms.Color,
+        Callback = function(color)
+            Settings.ViewModelChams.Arms.Color = color
+            getgenv().updateViewModelChams()
+        end,
+    })
 
 ViewModelChams:AddDropdown('ViewModelChamsArmsMaterial', {
     Text = 'Arms Material',
@@ -1215,7 +1258,7 @@ ViewModelChams:AddDropdown('ViewModelChamsArmsMaterial', {
     Callback = function(material)
         Settings.ViewModelChams.Arms.Material = Enum.Material[material]
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 ViewModelChams:AddSlider('ViewModelChamsArmsTransparency', {
@@ -1227,7 +1270,7 @@ ViewModelChams:AddSlider('ViewModelChamsArmsTransparency', {
     Callback = function(value)
         Settings.ViewModelChams.Arms.Transparency = value
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 ViewModelChams:AddToggle('ViewModelChamsWeaponsEnabled', {
@@ -1236,16 +1279,17 @@ ViewModelChams:AddToggle('ViewModelChamsWeaponsEnabled', {
     Callback = function(enabled)
         Settings.ViewModelChams.Weapons.Enabled = enabled
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
-ViewModelChams:AddLabel('Weapon Color'):AddColorPicker('ViewModelChamsWeaponsColor', {
-    Default = Settings.ViewModelChams.Weapons.Color,
-    Callback = function(color)
-        Settings.ViewModelChams.Weapons.Color = color
-        getgenv().updateViewModelChams()
-    end
-})
+ViewModelChams:AddLabel('Weapon Color')
+    :AddColorPicker('ViewModelChamsWeaponsColor', {
+        Default = Settings.ViewModelChams.Weapons.Color,
+        Callback = function(color)
+            Settings.ViewModelChams.Weapons.Color = color
+            getgenv().updateViewModelChams()
+        end,
+    })
 
 ViewModelChams:AddDropdown('ViewModelChamsWeaponsMaterial', {
     Text = 'Weapon Material',
@@ -1254,7 +1298,7 @@ ViewModelChams:AddDropdown('ViewModelChamsWeaponsMaterial', {
     Callback = function(material)
         Settings.ViewModelChams.Weapons.Material = Enum.Material[material]
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 ViewModelChams:AddSlider('ViewModelChamsWeaponsTransparency', {
@@ -1266,7 +1310,7 @@ ViewModelChams:AddSlider('ViewModelChamsWeaponsTransparency', {
     Callback = function(value)
         Settings.ViewModelChams.Weapons.Transparency = value
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 ViewModelChams:AddToggle('ViewModelChamsTexturesEnabled', {
@@ -1275,7 +1319,7 @@ ViewModelChams:AddToggle('ViewModelChamsTexturesEnabled', {
     Callback = function(enabled)
         Settings.ViewModelChams.Textures.Enabled = enabled
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 ViewModelChams:AddToggle('ViewModelChamsTexturesRemove', {
@@ -1284,7 +1328,7 @@ ViewModelChams:AddToggle('ViewModelChamsTexturesRemove', {
     Callback = function(enabled)
         Settings.ViewModelChams.Textures.RemoveTextures = enabled
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 ViewModelChams:AddDropdown('ViewModelChamsTexturesMaterial', {
@@ -1294,16 +1338,17 @@ ViewModelChams:AddDropdown('ViewModelChamsTexturesMaterial', {
     Callback = function(material)
         Settings.ViewModelChams.Textures.Material = Enum.Material[material]
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
-ViewModelChams:AddLabel('Texture Color'):AddColorPicker('ViewModelChamsTexturesColor', {
-    Default = Settings.ViewModelChams.Textures.Color,
-    Callback = function(color)
-        Settings.ViewModelChams.Textures.Color = color
-        getgenv().updateViewModelChams()
-    end
-})
+ViewModelChams:AddLabel('Texture Color')
+    :AddColorPicker('ViewModelChamsTexturesColor', {
+        Default = Settings.ViewModelChams.Textures.Color,
+        Callback = function(color)
+            Settings.ViewModelChams.Textures.Color = color
+            getgenv().updateViewModelChams()
+        end,
+    })
 
 ViewModelChams:AddSlider('ViewModelChamsTexturesTransparency', {
     Text = 'Texture Transparency',
@@ -1314,7 +1359,7 @@ ViewModelChams:AddSlider('ViewModelChamsTexturesTransparency', {
     Callback = function(value)
         Settings.ViewModelChams.Textures.Transparency = value
         getgenv().updateViewModelChams()
-    end
+    end,
 })
 
 -- Lighting Section
@@ -1325,7 +1370,7 @@ LightingSec:AddToggle('AmbientEnabled', {
     Callback = function(enabled)
         Settings.Lighting.Ambient.Enabled = enabled
         getgenv().UpdateLighting()
-    end
+    end,
 })
 
 LightingSec:AddLabel('Ambient Color'):AddColorPicker('AmbientColor', {
@@ -1333,7 +1378,7 @@ LightingSec:AddLabel('Ambient Color'):AddColorPicker('AmbientColor', {
     Callback = function(color)
         Settings.Lighting.Ambient.Color = color
         getgenv().UpdateLighting()
-    end
+    end,
 })
 
 LightingSec:AddToggle('OutdoorAmbientEnabled', {
@@ -1342,16 +1387,17 @@ LightingSec:AddToggle('OutdoorAmbientEnabled', {
     Callback = function(enabled)
         Settings.Lighting.OutdoorAmbient.Enabled = enabled
         getgenv().UpdateLighting()
-    end
+    end,
 })
 
-LightingSec:AddLabel('Outdoor Ambient Color'):AddColorPicker('OutdoorAmbientColor', {
-    Default = Settings.Lighting.OutdoorAmbient.Color,
-    Callback = function(color)
-        Settings.Lighting.OutdoorAmbient.Color = color
-        getgenv().UpdateLighting()
-    end
-})
+LightingSec:AddLabel('Outdoor Ambient Color')
+    :AddColorPicker('OutdoorAmbientColor', {
+        Default = Settings.Lighting.OutdoorAmbient.Color,
+        Callback = function(color)
+            Settings.Lighting.OutdoorAmbient.Color = color
+            getgenv().UpdateLighting()
+        end,
+    })
 
 LightingSec:AddToggle('ClockTimeEnabled', {
     Text = 'Clock Time Enabled',
@@ -1359,7 +1405,7 @@ LightingSec:AddToggle('ClockTimeEnabled', {
     Callback = function(enabled)
         Settings.Lighting.ClockTime.Enabled = enabled
         getgenv().UpdateLighting()
-    end
+    end,
 })
 
 LightingSec:AddSlider('ClockTime', {
@@ -1371,7 +1417,7 @@ LightingSec:AddSlider('ClockTime', {
     Callback = function(value)
         Settings.Lighting.ClockTime.Time = value
         getgenv().UpdateLighting()
-    end
+    end,
 })
 
 -- UI Settings
@@ -1380,7 +1426,7 @@ MenuGroup:AddButton({
     Text = 'Unload',
     Func = function()
         Library:Unload()
-    end
+    end,
 })
 
 MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', {
@@ -1392,7 +1438,7 @@ MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', {
     end,
     ChangedCallback = function(New)
         print('[cb] Menu keybind changed!', New)
-    end
+    end,
 })
 
 Library.ToggleKeybind = Options.MenuKeybind
@@ -1403,18 +1449,24 @@ local FrameTimer = tick()
 local FrameCounter = 0
 local FPS = 60
 
-local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
-    FrameCounter += 1
-    if (tick() - FrameTimer) >= 1 then
-        FPS = FrameCounter
-        FrameTimer = tick()
-        FrameCounter = 0
-    end
-    Library:SetWatermark(('Astralis | %s fps | %s ms'):format(
-        math.floor(FPS),
-        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-    ))
-end)
+local WatermarkConnection = game:GetService('RunService').RenderStepped
+    :Connect(function()
+        FrameCounter += 1
+        if (tick() - FrameTimer) >= 1 then
+            FPS = FrameCounter
+            FrameTimer = tick()
+            FrameCounter = 0
+        end
+        Library:SetWatermark(
+            ('Astralis | %s fps | %s ms'):format(
+                math.floor(FPS),
+                math.floor(
+                    game:GetService('Stats').Network.ServerStatsItem['Data Ping']
+                        :GetValue()
+                )
+            )
+        )
+    end)
 
 Library:OnUnload(function()
     WatermarkConnection:Disconnect()
