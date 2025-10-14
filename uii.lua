@@ -1384,7 +1384,7 @@ MenuGroup:AddButton({
 })
 
 MenuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind', {
-    Default = 'End',
+    Default = 'RightShift',
     NoUI = true,
     Text = 'Menu keybind',
     Callback = function(Value)
@@ -1418,7 +1418,6 @@ end)
 
 Library:OnUnload(function()
     WatermarkConnection:Disconnect()
-    print('Unloaded!')
     Library.Unloaded = true
 end)
 
