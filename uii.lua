@@ -1072,7 +1072,7 @@ AntiAimGroup:AddToggle('AntiAimEnabled', {
 
 AntiAimGroup:AddDropdown('AntiAimMode', {
     Text = 'Mode',
-    Values = { 'Spin', 'Jitter', 'Static' },
+    Values = { 'Spin', 'Jitter', 'Static', 'Hide' },
     Default = Settings.AntiAim.Mode,
     Callback = function(v)
         Settings.AntiAim.Mode = v
