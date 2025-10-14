@@ -1060,7 +1060,7 @@ AntiAimGroup:AddToggle('AntiAimEnabled', {
             local currentCharObject =
                 getgenv().charInterface.getCharacterObject()
             if currentCharObject then
-                currentCharObject:setStance('stand')
+                getgenv().currentCharObject:setStance('stand')
                 getgenv().network:send('stance', 'stand')
                 if Settings.ThirdPerson.Enabled and getgenv().currentObj then
                     getgenv().currentObj:setStance('stand')
