@@ -1,8 +1,9 @@
 -- UI Script for Astralis using LinoriaLib
-local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
-local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
-local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
-local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+local library = loadstring(
+    game:HttpGet(
+        'https://raw.githubusercontent.com/randomahhnamecauseimtoolazy/chat/refs/heads/main/lib.lua'
+    )
+)()
 
 -- Access global Settings and functions from the main script
 local Settings = getgenv().Settings
@@ -1421,13 +1422,8 @@ Library:OnUnload(function()
     Library.Unloaded = true
 end)
 
--- Setup SaveManager and ThemeManager
-ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
-SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
-ThemeManager:SetFolder('Astralis')
 SaveManager:SetFolder('Astralis')
 SaveManager:BuildConfigSection(Tabs['UI Settings'])
-ThemeManager:ApplyToTab(Tabs['UI Settings'])
 SaveManager:LoadAutoloadConfig()
