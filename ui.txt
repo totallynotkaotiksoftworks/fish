@@ -206,17 +206,7 @@ ThirdPersonGroup:AddToggle({
         Settings.ThirdPerson.Enabled = s
         if charInterface.isAlive() and Settings.ThirdPerson.ShowCharacter then
             if s then
-                local classData = playerClient.getPlayerData().settings.classdata
-                fakeRepObject._player = localplayer
-                fakeRepObject:spawn(nil, classData[classData.curclass])
-                currentObj = fakeRepObject._thirdPersonObject
-                fakeRepObject:setActiveIndex(1)
-                for i = 1, 3 do
-                    if fakeRepObject:getWeaponObjects()[i] then
-                        currentObj:buildWeapon(i)
-                    end
-                end
-                started = false
+                started = true
             else
                 fakeRepObject:despawn()
                 if currentObj then
@@ -228,7 +218,6 @@ ThirdPersonGroup:AddToggle({
         end
     end,
 })
-
 ThirdPersonGroup:AddToggle({
     Name = 'Show Character',
     Flag = 'ThirdPersonShowCharacter',
