@@ -70,6 +70,39 @@ local SETTINGS = {
         UseFOV = false,
     },
 
+    BulletTracers = {
+        Local = {
+            Enabled = false,
+            ColorStart = Color3.fromRGB(127, 0, 255),
+            ColorEnd = Color3.fromRGB(127, 0, 255),
+            Lifetime = 1,
+            Texture = 'Default',
+        },
+        Enemy = {
+            Enabled = false,
+            ColorStart = Color3.fromRGB(255, 0, 0),
+            ColorEnd = Color3.fromRGB(255, 0, 0),
+            Lifetime = 1,
+            Texture = 'Default',
+        },
+        UseThirdPersonMuzzle = false,
+        UseNewOrigin = false,
+        Textures = {
+            ['Default'] = 'rbxassetid://446111271',
+            ['Nothing'] = '',
+        },
+    },
+
+    Viewmodel = {
+        Offset = {
+            Enabled = false,
+            RemoveOnAim = false,
+            X = 0,
+            Y = 0,
+            Z = 0,
+        },
+    },
+
     Aimbot = {
         Enabled = false,
         AimPart = 'Torso', -- "Head" or "Torso"
@@ -82,8 +115,8 @@ local SETTINGS = {
 
     SilentAim = {
         Enabled = false,
-        HeadshotChance = 0, -- 0-100%
-        HitChance = 75.5, -- 0-100%
+        HeadshotChance = 0,
+        HitChance = 75.5,
         TargetPart = 'Head', -- "Head" or "Torso"
         UseFOV = false,
         FOVRadius = 150,
@@ -150,6 +183,8 @@ local Players = game:GetService('Players')
 local Camera = workspace.CurrentCamera
 local UserInputService = game:GetService('UserInputService')
 local CoreGui = game:GetService('CoreGui')
+local RecieverRemote = game:GetService('ReplicatedStorage').RemoteEvent
+local Reciever = RecieverRemote.OnClientEvent
 
 local lib = loadstring(
     game:HttpGet(
@@ -158,7 +193,7 @@ local lib = loadstring(
 )()
 
 -- =============================================
--- MODULES
+-- GAME MODULE REQUIRES
 -- =============================================
 
 local require = getrenv().shared and getrenv().shared.require
@@ -181,8 +216,19 @@ local ScreenCull = require('ScreenCull')
 local math_random = math.random
 
 -- =============================================
--- INIT
+-- GLOBAL VARIABLES & STORAGE
 -- =============================================
+
+local LocalPlayer = Players.LocalPlayer
+
+local fakeRepObject = ReplicationObject.new(setmetatable({}, {
+    __index = function(self, index)
+        return LocalPlayer[index]
+    end,
+    __newindex = function(self, index, value)
+        LocalPlayer[index] = value
+    end,
+}))
 
 local Window = Library:CreateWindow({
     Title = SETTINGS.UI.WindowTitle,
@@ -192,17 +238,6 @@ local Window = Library:CreateWindow({
     MenuFadeTime = SETTINGS.UI.MenuFadeTime,
 })
 
-local LocalPlayer = Players.LocalPlayer
-
-fakeRepObject = ReplicationObject.new(setmetatable({}, {
-    __index = function(self, index)
-        return LocalPlayer[index]
-    end,
-    __newindex = function(self, index, value)
-        LocalPlayer[index] = value
-    end,
-}))
-
 local Tabs = {
     Main = Window:AddTab('Main'),
     Visuals = Window:AddTab('Visuals'),
@@ -210,8 +245,52 @@ local Tabs = {
     ['UI Settings'] = Window:AddTab('UI Settings'),
 }
 
+local OriginalOffsets = {}
+local Storage = {
+    esp_cache = {},
+    ViewmodelProperties = {},
+    highlight_chams = {},
+    box_chams = {},
+}
+local Visuals = {
+    Storage = workspace.Terrain,
+    TracerBeams = {},
+}
+
+local ViewportSize = Camera.ViewportSize
+
+local currentTeam = nil
+local teamCheckCooldown = 0
+local currentObj
+local started = false
+local lastPos = nil
+local lastFrameTime = nil
+local startTime = os.clock()
+local newSpawnCache = {
+    currentAddition = 0,
+    latency = 0,
+    updateDebt = 0,
+    spawnTime = 0,
+    spawned = false,
+    lastUpdate = nil,
+    lastUpdateTime = 0,
+    walkSpeed = nil,
+}
+local playerModelToReplication = {}
+
+local TargetMeshIds = SETTINGS.Game.TargetMeshIds
+
+local isHoldingMouse2 = false
+local currentTarget = nil
+local targetLockTime = 0
+
+local FOVCircle = Drawing.new('Circle')
+FOVCircle.NumSides = 64
+FOVCircle.Visible = false
+FOVCircle.ZIndex = 10
+
 -- =============================================
--- MAIN TAB (AIMBOT)
+-- UI SETUP: MAIN TAB (AIMBOT & SILENT AIM)
 -- =============================================
 
 local AimbotSettings = SETTINGS.Aimbot
@@ -253,10 +332,6 @@ AimbotGroupBox:AddSlider('SmoothnessSlider', {
         AimbotSettings.Smoothness = Value
     end,
 })
-
--- =============================================
--- SILENT AIM UI
--- =============================================
 
 local SilentAimGroupBox = Tabs.Main:AddLeftGroupbox('Silent Aim')
 
@@ -319,12 +394,11 @@ SilentAimGroupBox:AddSlider('SilentAimFOVSlider', {
 })
 
 -- =============================================
--- VISUALS TAB (ESP)
+-- UI SETUP: VISUALS TAB (ESP & CHAMS)
 -- =============================================
 
 local ESPSettings = SETTINGS.ESP
 
--- ESP Settings Group
 local ESPGroupBox = Tabs.Visuals:AddLeftGroupbox('ESP Settings')
 
 ESPGroupBox:AddToggle('BoxToggle', {
@@ -359,9 +433,6 @@ ESPGroupBox:AddToggle('DistanceToggle', {
     end,
 })
 
--- =============================================
--- CHAMS SETTINGS
--- =============================================
 local ChamsGroupBox = Tabs.Visuals:AddRightGroupbox('Chams Settings')
 
 ChamsGroupBox:AddDropdown('ChamsMode', {
@@ -391,7 +462,6 @@ ChamsGroupBox:AddDropdown('ChamsMode', {
 local VisualCustomizationGroupBox =
     Tabs.Visuals:AddLeftGroupbox('ESP Customization')
 
--- Box Visuals
 VisualCustomizationGroupBox:AddLabel('Box Color')
     :AddColorPicker('BoxColorPicker', {
         Default = ESPSettings.Box.Color,
@@ -413,7 +483,6 @@ VisualCustomizationGroupBox:AddSlider('BoxThicknessSlider', {
     end,
 })
 
--- Tracer Visuals
 VisualCustomizationGroupBox:AddLabel('Tracer Color')
     :AddColorPicker('TracerColorPicker', {
         Default = ESPSettings.Tracer.Color,
@@ -435,7 +504,6 @@ VisualCustomizationGroupBox:AddSlider('TracerThicknessSlider', {
     end,
 })
 
--- Distance Visuals
 VisualCustomizationGroupBox:AddLabel('Distance Color')
     :AddColorPicker('DistanceColorPicker', {
         Default = ESPSettings.Distance.Color,
@@ -468,7 +536,6 @@ ChamsVisualsGroupBox:AddLabel('Highlight Chams Color')
             ESPSettings.Chams.Highlight.Color = Value
         end,
     })
-
 
 ChamsVisualsGroupBox:AddLabel('Highlight Outline Color')
     :AddColorPicker('HighlightOutlineColorPicker', {
@@ -525,7 +592,103 @@ ChamsVisualsGroupBox:AddSlider('BoxChamsSizeMultiplier', {
 })
 
 -- =============================================
--- FOV CIRCLE
+-- UI SETUP: VISUALS TAB (BULLET TRACERS)
+-- =============================================
+
+local BulletTracerGroup = Tabs.Visuals:AddRightGroupbox('Bullet Tracers')
+
+BulletTracerGroup:AddToggle('LocalTracersToggle', {
+    Text = 'Local Bullet Tracers',
+    Default = SETTINGS.BulletTracers.Local.Enabled,
+    Callback = function(Value)
+        SETTINGS.BulletTracers.Local.Enabled = Value
+    end,
+})
+
+BulletTracerGroup:AddLabel('Local Tracer Start Color')
+    :AddColorPicker('LocalTracerStartColor', {
+        Default = SETTINGS.BulletTracers.Local.ColorStart,
+        Title = 'Local Tracer Start Color',
+        Callback = function(Value)
+            SETTINGS.BulletTracers.Local.ColorStart = Value
+        end,
+    })
+
+BulletTracerGroup:AddLabel('Local Tracer End Color')
+    :AddColorPicker('LocalTracerEndColor', {
+        Default = SETTINGS.BulletTracers.Local.ColorEnd,
+        Title = 'Local Tracer End Color',
+        Callback = function(Value)
+            SETTINGS.BulletTracers.Local.ColorEnd = Value
+        end,
+    })
+
+BulletTracerGroup:AddToggle('EnemyTracersToggle', {
+    Text = 'Enemy Bullet Tracers',
+    Default = SETTINGS.BulletTracers.Enemy.Enabled,
+    Callback = function(Value)
+        SETTINGS.BulletTracers.Enemy.Enabled = Value
+    end,
+})
+
+BulletTracerGroup:AddLabel('Enemy Tracer Start Color')
+    :AddColorPicker('EnemyTracerStartColor', {
+        Default = SETTINGS.BulletTracers.Enemy.ColorStart,
+        Title = 'Enemy Tracer Start Color',
+        Callback = function(Value)
+            SETTINGS.BulletTracers.Enemy.ColorStart = Value
+        end,
+    })
+
+BulletTracerGroup:AddLabel('Enemy Tracer End Color')
+    :AddColorPicker('EnemyTracerEndColor', {
+        Default = SETTINGS.BulletTracers.Enemy.ColorEnd,
+        Title = 'Enemy Tracer End Color',
+        Callback = function(Value)
+            SETTINGS.BulletTracers.Enemy.ColorEnd = Value
+        end,
+    })
+
+BulletTracerGroup:AddToggle('UseThirdPersonMuzzle', {
+    Text = 'Use Third Person Muzzle',
+    Default = SETTINGS.BulletTracers.UseThirdPersonMuzzle,
+    Callback = function(Value)
+        SETTINGS.BulletTracers.UseThirdPersonMuzzle = Value
+    end,
+})
+
+BulletTracerGroup:AddToggle('UseNewOrigin', {
+    Text = 'Use New Origin',
+    Default = SETTINGS.BulletTracers.UseNewOrigin,
+    Callback = function(Value)
+        SETTINGS.BulletTracers.UseNewOrigin = Value
+    end,
+})
+
+BulletTracerGroup:AddSlider('TracerLifetime', {
+    Text = 'Tracer Lifetime',
+    Default = SETTINGS.BulletTracers.Local.Lifetime,
+    Min = 0.1,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(Value)
+        SETTINGS.BulletTracers.Local.Lifetime = Value
+        SETTINGS.BulletTracers.Enemy.Lifetime = Value
+    end,
+})
+
+BulletTracerGroup:AddDropdown('TracerTexture', {
+    Text = 'Tracer Texture',
+    Default = 'Default',
+    Values = { 'Default', 'Nothing' },
+    Callback = function(Value)
+        SETTINGS.BulletTracers.Local.Texture = Value
+        SETTINGS.BulletTracers.Enemy.Texture = Value
+    end,
+})
+
+-- =============================================
+-- UI SETUP: MAIN TAB (FOV SETTINGS)
 -- =============================================
 
 local FOVSettings = SETTINGS.FOVCircle
@@ -589,7 +752,7 @@ FOVGroupBox:AddSlider('FOVTransparencySlider', {
 })
 
 -- =============================================
--- THIRD PERSON & ANTI-AIM
+-- UI SETUP: MISC TAB (THIRD PERSON & ANTI-AIM)
 -- =============================================
 
 local ThirdPersonGroupBox = Tabs.Misc:AddLeftGroupbox('Third Person')
@@ -748,44 +911,65 @@ AntiAimGroupBox:AddSlider('PitchAngle', {
 })
 
 -- =============================================
--- CORE VARIABLES & FUNCTIONS
+-- UI SETUP: MISC TAB (VIEWMODEL OFFSET)
 -- =============================================
 
-local TargetMeshIds = SETTINGS.Game.TargetMeshIds
+local ViewmodelGroupBox = Tabs.Misc:AddLeftGroupbox('Viewmodel Offset')
 
--- variables
-local Vec2 = Vector2.new
-local Storage = {
-    esp_cache = {},
-    ViewmodelProperties = {},
-    highlight_chams = {},
-    box_chams = {},
-}
+ViewmodelGroupBox:AddToggle('ViewmodelOffsetEnabled', {
+    Text = 'Enable Viewmodel Offset',
+    Default = SETTINGS.Viewmodel.Offset.Enabled,
+    Callback = function(Value)
+        SETTINGS.Viewmodel.Offset.Enabled = Value
+    end,
+})
 
-local ViewportSize = Camera.ViewportSize
+ViewmodelGroupBox:AddToggle('ViewmodelOffsetRemoveOnAim', {
+    Text = 'Remove Offset When Aiming',
+    Default = SETTINGS.Viewmodel.Offset.RemoveOnAim,
+    Callback = function(Value)
+        SETTINGS.Viewmodel.Offset.RemoveOnAim = Value
+    end,
+})
 
-local currentTeam = nil
-local teamCheckCooldown = 0
-local currentObj
-local started = false
-local lastPos = nil
-local lastFrameTime = nil
-local startTime = os.clock()
-local newSpawnCache = {
-    currentAddition = 0,
-    latency = 0,
-    updateDebt = 0,
-    spawnTime = 0,
-    spawned = false,
-    lastUpdate = nil,
-    lastUpdateTime = 0,
-    walkSpeed = nil,
-}
-local playerModelToReplication = {}
+ViewmodelGroupBox:AddSlider('ViewmodelOffsetX', {
+    Text = 'Offset X',
+    Default = SETTINGS.Viewmodel.Offset.X,
+    Min = -5,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        SETTINGS.Viewmodel.Offset.X = Value
+    end,
+})
 
-local GetPlayers, IsEnemy, CacheObject, UncacheObject, GetBodyPart, UpdateLocalTeam
+ViewmodelGroupBox:AddSlider('ViewmodelOffsetY', {
+    Text = 'Offset Y',
+    Default = SETTINGS.Viewmodel.Offset.Y,
+    Min = -5,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        SETTINGS.Viewmodel.Offset.Y = Value
+    end,
+})
 
-function UpdateLocalTeam()
+ViewmodelGroupBox:AddSlider('ViewmodelOffsetZ', {
+    Text = 'Offset Z',
+    Default = SETTINGS.Viewmodel.Offset.Z,
+    Min = -5,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        SETTINGS.Viewmodel.Offset.Z = Value
+    end,
+})
+
+-- =============================================
+-- CORE FUNCTIONS: PLAYER & TEAM HANDLING
+-- =============================================
+
+local function UpdateLocalTeam()
     if LocalPlayer and LocalPlayer.Team then
         currentTeam = LocalPlayer.Team
     end
@@ -802,7 +986,7 @@ LocalPlayer:GetPropertyChangedSignal('Team'):Connect(function()
     ClearBoxChams()
 end)
 
-function GetPlayers()
+local function GetPlayers()
     local entity_list = {}
     local playersFolder = workspace[SETTINGS.Game.PlayerFolder]
 
@@ -816,7 +1000,7 @@ function GetPlayers()
     return entity_list
 end
 
-function IsEnemy(player)
+local function IsEnemy(player)
     if not currentTeam then
         UpdateLocalTeam()
         if not currentTeam then
@@ -854,32 +1038,7 @@ function IsEnemy(player)
     return true
 end
 
-function CacheObject(object)
-    if not Storage.esp_cache[object] then
-        Storage.esp_cache[object] = {
-            box_square = Drawing.new('Square'),
-            tracer_line = Drawing.new('Line'),
-            distance_label = Drawing.new('Text'),
-        }
-
-        local cache = Storage.esp_cache[object]
-        cache.box_square.Filled = ESPSettings.Box.Filled
-        cache.distance_label.Center = ESPSettings.Distance.CenterText
-        cache.distance_label.Outline = ESPSettings.Distance.Outline
-    end
-end
-
-function UncacheObject(object)
-    local cache = Storage.esp_cache[object]
-    if cache then
-        cache.box_square:Remove()
-        cache.tracer_line:Remove()
-        cache.distance_label:Remove()
-        Storage.esp_cache[object] = nil
-    end
-end
-
-function GetBodyPart(player, part)
+local function GetBodyPart(player, part)
     if part == 'Head' then
         local head = player:FindFirstChild('Head')
         if head then
@@ -907,7 +1066,88 @@ function GetBodyPart(player, part)
 end
 
 -- =============================================
--- HIGHLIGHT CHAMS FUNCTIONS
+-- CORE FUNCTIONS: ESP CACHING
+-- =============================================
+
+local function CacheObject(object)
+    if not Storage.esp_cache[object] then
+        Storage.esp_cache[object] = {
+            box_square = Drawing.new('Square'),
+            tracer_line = Drawing.new('Line'),
+            distance_label = Drawing.new('Text'),
+        }
+
+        local cache = Storage.esp_cache[object]
+        cache.box_square.Filled = ESPSettings.Box.Filled
+        cache.distance_label.Center = ESPSettings.Distance.CenterText
+        cache.distance_label.Outline = ESPSettings.Distance.Outline
+    end
+end
+
+local function UncacheObject(object)
+    local cache = Storage.esp_cache[object]
+    if cache then
+        cache.box_square:Remove()
+        cache.tracer_line:Remove()
+        cache.distance_label:Remove()
+        Storage.esp_cache[object] = nil
+    end
+end
+
+-- =============================================
+-- CORE FUNCTIONS: VIEWMODEL OFFSET
+-- =============================================
+
+local function UpdateViewmodelOffset()
+    local Controller = WeaponControllerInterface.getActiveWeaponController()
+    if not Controller then
+        return
+    end
+
+    local weapon = Controller:getActiveWeapon()
+    if not weapon then
+        return
+    end
+
+    if not OriginalOffsets[weapon.weaponName] then
+        OriginalOffsets[weapon.weaponName] = weapon._mainOffset
+    end
+
+    if SETTINGS.Viewmodel.Offset.Enabled then
+        local X, Y, Z =
+            SETTINGS.Viewmodel.Offset.X,
+            SETTINGS.Viewmodel.Offset.Y,
+            SETTINGS.Viewmodel.Offset.Z
+
+        if weapon._aiming == nil then
+            weapon._mainOffset = weapon._mainOffset:Lerp(
+                OriginalOffsets[weapon.weaponName] * CFrame.new(X, Y, -Z),
+                0.1
+            )
+        else
+            if
+                weapon._aiming == true
+                and SETTINGS.Viewmodel.Offset.RemoveOnAim
+            then
+                weapon._mainOffset = weapon._mainOffset:Lerp(
+                    OriginalOffsets[weapon.weaponName],
+                    0.1
+                )
+            else
+                weapon._mainOffset = weapon._mainOffset:Lerp(
+                    OriginalOffsets[weapon.weaponName] * CFrame.new(X, Y, -Z),
+                    0.1
+                )
+            end
+        end
+    else
+        weapon._mainOffset =
+            weapon._mainOffset:Lerp(OriginalOffsets[weapon.weaponName], 0.1)
+    end
+end
+
+-- =============================================
+-- CORE FUNCTIONS: HIGHLIGHT CHAMS
 -- =============================================
 
 function ClearHighlightChams()
@@ -941,7 +1181,6 @@ function UpdateHighlightChams(player)
         return
     end
 
-    -- Create highlight if it doesn't exist
     if not Storage.highlight_chams[player] then
         local highlight = Instance.new('Highlight')
         highlight.Parent = CoreGui
@@ -953,7 +1192,6 @@ function UpdateHighlightChams(player)
 
     local highlight = Storage.highlight_chams[player]
     if highlight and highlight:IsA('Highlight') then
-        -- Apply all highlight properties
         highlight.FillColor = ESPSettings.Chams.Highlight.Color
         highlight.OutlineColor = ESPSettings.Chams.Highlight.OutlineColor
         highlight.FillTransparency =
@@ -969,7 +1207,7 @@ function UpdateHighlightChams(player)
 end
 
 -- =============================================
--- BOX CHAMS FUNCTIONS
+-- CORE FUNCTIONS: BOX CHAMS
 -- =============================================
 
 function ClearBoxChams()
@@ -1007,7 +1245,6 @@ function UpdateBoxChams(player)
         RightLeg = nil,
     }
 
-    -- Find arms and legs by mesh ID since they have no names
     local foundArms = {}
     local foundLegs = {}
 
@@ -1017,10 +1254,8 @@ function UpdateBoxChams(player)
             if mesh and TargetMeshIds[mesh.MeshId] then
                 local meshId = mesh.MeshId
 
-                -- Arms (rbxassetid://4049240323)
                 if meshId == 'rbxassetid://4049240323' then
                     table.insert(foundArms, part)
-                -- Legs (rbxassetid://4049240209)
                 elseif meshId == 'rbxassetid://4049240209' then
                     table.insert(foundLegs, part)
                 end
@@ -1028,16 +1263,13 @@ function UpdateBoxChams(player)
         end
     end
 
-    -- Assign arms and legs based on position (left/right)
     if #foundArms >= 2 then
-        -- Sort arms by X position to determine left/right
         table.sort(foundArms, function(a, b)
             return a.Position.X < b.Position.X
         end)
-        bodyParts.LeftArm = foundArms[1] -- More negative X = left
-        bodyParts.RightArm = foundArms[2] -- More positive X = right
+        bodyParts.LeftArm = foundArms[1]
+        bodyParts.RightArm = foundArms[2]
     elseif #foundArms == 1 then
-        -- If only one arm found, check its position
         if
             foundArms[1].Position.X
             < (bodyParts.Torso and bodyParts.Torso.Position.X or 0)
@@ -1049,14 +1281,12 @@ function UpdateBoxChams(player)
     end
 
     if #foundLegs >= 2 then
-        -- Sort legs by X position to determine left/right
         table.sort(foundLegs, function(a, b)
             return a.Position.X < b.Position.X
         end)
-        bodyParts.LeftLeg = foundLegs[1] -- More negative X = left
-        bodyParts.RightLeg = foundLegs[2] -- More positive X = right
+        bodyParts.LeftLeg = foundLegs[1]
+        bodyParts.RightLeg = foundLegs[2]
     elseif #foundLegs == 1 then
-        -- If only one leg found, check its position
         if
             foundLegs[1].Position.X
             < (bodyParts.Torso and bodyParts.Torso.Position.X or 0)
@@ -1089,7 +1319,6 @@ function UpdateBoxChams(player)
     local boxData = Storage.box_chams[player]
     local folder = boxData.folder
 
-    -- Create/update box chams for each body part
     for partName, bodyPart in pairs(bodyParts) do
         if bodyPart and not boxData.parts[partName] then
             local boxAdornment = Instance.new('BoxHandleAdornment')
@@ -1110,12 +1339,10 @@ function UpdateBoxChams(player)
         end
     end
 
-    -- Update existing box chams
     for partName, bodyPart in pairs(bodyParts) do
         if bodyPart and boxData.parts[partName] then
             local boxAdornment = boxData.parts[partName]
 
-            -- Update size based on body part type
             local sizeMultiplier = ESPSettings.Chams.Box.SizeMultiplier
             if partName == 'Head' then
                 boxAdornment.Size = Vector3.new(1.2, 1, 1) * sizeMultiplier
@@ -1137,7 +1364,88 @@ function UpdateBoxChams(player)
 end
 
 -- =============================================
--- THIRD PERSON
+-- CORE FUNCTIONS: BULLET TRACERS
+-- =============================================
+
+function Visuals:RenderBulletTracer(Origin, Target, Lifetime, Color, Color2)
+    local BeamStorage = Instance.new('Folder')
+    BeamStorage.Name = 'BulletTracer'
+    BeamStorage.Parent = self.Storage
+
+    local Start = Instance.new('Part')
+    Start.Position = Origin
+    Start.Parent = BeamStorage
+    Start.Transparency = 1
+    Start.CanCollide = false
+    Start.Anchored = true
+    Start.Size = Vector3.new(0, 0, 0)
+
+    local End = Start:Clone()
+    End.Parent = BeamStorage
+    End.Position = Target
+
+    local A0 = Instance.new('Attachment')
+    A0.Parent = Start
+
+    local A1 = Instance.new('Attachment')
+    A1.Parent = End
+
+    local TextureName = SETTINGS.BulletTracers.Local.Texture
+    local BeamWidth = TextureName == 'Nothing' and 0.075 or 0.9
+
+    local Beam = Instance.new('Beam')
+    Beam.Parent = BeamStorage
+    Beam.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color),
+        ColorSequenceKeypoint.new(1, Color2),
+    })
+    Beam.Transparency = NumberSequence.new(1)
+    Beam.Width0 = BeamWidth
+    Beam.Width1 = BeamWidth
+    Beam.Attachment0 = A0
+    Beam.Attachment1 = A1
+    Beam.FaceCamera = true
+    Beam.Texture = SETTINGS.BulletTracers.Textures[TextureName]
+    Beam.TextureSpeed = 1 + math.random()
+    Beam.TextureLength = 4
+    Beam.TextureMode = Enum.TextureMode.Static
+    Beam.LightEmission = 10
+
+    task.spawn(function()
+        for Transparency = 1, 0, -1 / 30 do
+            Beam.Transparency = NumberSequence.new(Transparency)
+            task.wait()
+        end
+    end)
+
+    task.delay(Lifetime, function()
+        for Transparency = 0, 1, 1 / 60 do
+            Beam.Transparency = NumberSequence.new(Transparency)
+            task.wait()
+        end
+        BeamStorage:Destroy()
+    end)
+
+    table.insert(self.TracerBeams, BeamStorage)
+
+    return Beam
+end
+
+task.spawn(function()
+    while true do
+        task.wait(10)
+        local currentTime = tick()
+        for i = #Visuals.TracerBeams, 1, -1 do
+            local beam = Visuals.TracerBeams[i]
+            if not beam or not beam.Parent then
+                table.remove(Visuals.TracerBeams, i)
+            end
+        end
+    end
+end)
+
+-- =============================================
+-- CORE FUNCTIONS: THIRD PERSON & ANTI-AIM
 -- =============================================
 
 local function applyAAAngles(angles)
@@ -1481,7 +1789,7 @@ function WeaponControllerInterface:preparePickUpMelee(slot, name, ...)
 end
 
 -- =============================================
--- SILENT AIM
+-- CORE FUNCTIONS: SILENT AIM
 -- =============================================
 
 local _getActiveWeaponController =
@@ -1559,7 +1867,7 @@ function SilentAim:GetTrajectory(Origin, Target, Acceleration, Speed)
 end
 
 -- =============================================
--- BULLET INTERFACE HOOK
+-- HOOKS: BULLET INTERFACE & NETWORK
 -- =============================================
 
 local _BInewBullet = BulletInterface.newBullet
@@ -1567,10 +1875,15 @@ function BulletInterface.newBullet(Data)
     if Data.ontouch and Data.extra then
         local VisualPosition = Data.visualorigin
         local FirePosition = Data.position
+        local OriginalVelocity = Data.velocity
 
         local Controller, Weapon = GetWeaponController()
         if Controller and Weapon then
             local BulletSpeed = Weapon:getWeaponStat('bulletspeed') or 0
+
+            local IsUsingSilentAim = false
+            local SilentAimTarget = nil
+            local ModifiedVelocity = nil
 
             local Acceleration = PublicSettings.bulletAcceleration
             if SETTINGS.SilentAim.Enabled and not Data.im_hacking then
@@ -1586,7 +1899,6 @@ function BulletInterface.newBullet(Data)
                     local HitPart =
                         CharacterHash[SETTINGS.SilentAim.TargetPart or 'Head']
 
-                    -- Apply headshot chance
                     if math_random(100) < SETTINGS.SilentAim.HeadshotChance then
                         HitPart = CharacterHash.Head
                     end
@@ -1605,7 +1917,6 @@ function BulletInterface.newBullet(Data)
                             BulletSpeed
                         )
 
-                        -- Apply hit chance with spread
                         if math_random(100) < SETTINGS.SilentAim.HitChance then
                             Velocity = Velocity
                                 + Vector3.new(
@@ -1619,8 +1930,83 @@ function BulletInterface.newBullet(Data)
                         SilentAim.Velocity = Velocity
                         Data.velocity = Velocity
                         SilentAim.LastTarget = Entry._player
+
+                        IsUsingSilentAim = true
+                        SilentAimTarget = HitPart.Position + Prediction
+                        ModifiedVelocity = Velocity
                     end
                 end
+            end
+
+            if SETTINGS.BulletTracers.Local.Enabled then
+                local Direction
+                local FinalPosition
+
+                if IsUsingSilentAim and ModifiedVelocity then
+                    Direction = ModifiedVelocity.Unit
+                        * (BulletSpeed > 0 and BulletSpeed or 1000)
+
+                    local raycastParams = RaycastParams.new()
+                    raycastParams.FilterDescendantsInstances = {
+                        workspace.Terrain,
+                        workspace.Ignore,
+                        workspace.Players,
+                        Camera,
+                    }
+                    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+                    local RayResult = workspace:Raycast(
+                        FirePosition,
+                        Direction,
+                        raycastParams
+                    )
+                    FinalPosition = RayResult and RayResult.Position
+                        or (FirePosition + Direction)
+                else
+                    Direction = OriginalVelocity.Unit
+                        * (BulletSpeed > 0 and BulletSpeed or 1000)
+
+                    local raycastParams = RaycastParams.new()
+                    raycastParams.FilterDescendantsInstances = {
+                        workspace.Terrain,
+                        workspace.Ignore,
+                        workspace.Players,
+                        Camera,
+                    }
+                    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+                    local RayResult = workspace:Raycast(
+                        FirePosition,
+                        Direction,
+                        raycastParams
+                    )
+                    FinalPosition = RayResult and RayResult.Position
+                        or (FirePosition + Direction)
+                end
+
+                local TracerOrigin = FirePosition
+                if
+                    SETTINGS.BulletTracers.UseThirdPersonMuzzle
+                    and SETTINGS.ThirdPerson.Enabled
+                    and currentObj
+                then
+                    local Muzzle = currentObj._muzzlePart
+                    if Muzzle then
+                        TracerOrigin = Muzzle.Position
+                    end
+                end
+
+                if SETTINGS.BulletTracers.UseNewOrigin then
+                    TracerOrigin = Data.position
+                end
+
+                Visuals:RenderBulletTracer(
+                    TracerOrigin,
+                    FinalPosition,
+                    SETTINGS.BulletTracers.Local.Lifetime,
+                    SETTINGS.BulletTracers.Local.ColorStart,
+                    SETTINGS.BulletTracers.Local.ColorEnd
+                )
             end
         end
 
@@ -1630,7 +2016,6 @@ function BulletInterface.newBullet(Data)
     return _BInewBullet(Data)
 end
 
--- Hook into network bullets to apply silent aim velocity
 local originalNetworkSend = NetworkClient.send
 function NetworkClient:send(name, ...)
     if name == 'newbullets' and rawget(SilentAim, 'Velocity') then
@@ -1642,17 +2027,55 @@ function NetworkClient:send(name, ...)
         rawset(SilentAim, 'Velocity', nil)
     end
 
-    -- Call the original function
     return originalNetworkSend(self, name, ...)
 end
 
--- =============================================
--- AIMBOT LOGIC
--- =============================================
+Reciever:Connect(function(Method, ...)
+    if Method == 'newbullets' then
+        local BulletData = ...
 
-local isHoldingMouse2 = false
-local currentTarget = nil
-local targetLockTime = 0
+        local Shooter = BulletData.player
+        if
+            Shooter
+            and Shooter.Team ~= LocalPlayer.Team
+            and SETTINGS.BulletTracers.Enemy.Enabled
+        then
+            local FirePosition = BulletData.firepos
+
+            local raycastParams = RaycastParams.new()
+            raycastParams.FilterDescendantsInstances = {
+                workspace.Terrain,
+                workspace.Ignore,
+                workspace.Players,
+                Camera,
+            }
+            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+            for Index, Bullet in next, BulletData.bullets do
+                local RayResult = workspace:Raycast(
+                    FirePosition,
+                    Bullet.velocity.Unit * 400,
+                    raycastParams
+                )
+
+                local EndPosition = RayResult and RayResult.Position
+                    or (FirePosition + Bullet.velocity.Unit * 400)
+
+                Visuals:RenderBulletTracer(
+                    FirePosition,
+                    EndPosition,
+                    SETTINGS.BulletTracers.Enemy.Lifetime,
+                    SETTINGS.BulletTracers.Enemy.ColorStart,
+                    SETTINGS.BulletTracers.Enemy.ColorEnd
+                )
+            end
+        end
+    end
+end)
+
+-- =============================================
+-- CORE FUNCTIONS: AIMBOT
+-- =============================================
 
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == AimbotSettings.TriggerKey then
@@ -1675,7 +2098,7 @@ local function GetClosestTarget()
             local screenPos, onScreen =
                 Camera:WorldToViewportPoint(currentTarget.Position)
             local mousePos = ViewportSize / 2
-            local distance = (Vec2(screenPos.X, screenPos.Y) - mousePos).Magnitude
+            local distance = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
 
             if onScreen then
                 if AimbotSettings.UseFOV then
@@ -1706,7 +2129,9 @@ local function GetClosestTarget()
                 local screenPos, onScreen =
                     Camera:WorldToViewportPoint(targetPart.Position)
                 if onScreen then
-                    local distance = (Vec2(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    local distance = (
+                        Vector2.new(screenPos.X, screenPos.Y) - mousePos
+                    ).Magnitude
 
                     if AimbotSettings.UseFOV then
                         local maxAllowed = SETTINGS.FOVCircle.Radius
@@ -1738,7 +2163,7 @@ local function GetClosestTarget()
 end
 
 -- =============================================
--- MAIN LOOPS
+-- MAIN UPDATE LOOPS: ESP, AIMBOT, FOV, THIRD PERSON
 -- =============================================
 
 function UpdateESP()
@@ -1758,7 +2183,6 @@ function UpdateESP()
             validPlayers[player] = true
             CacheObject(player)
 
-            -- Update chams based on mode
             if ESPSettings.Chams.Mode == 'Highlight' then
                 UpdateHighlightChams(player)
                 ClearBoxChams()
@@ -1770,7 +2194,6 @@ function UpdateESP()
                 ClearBoxChams()
             end
         else
-            -- Remove chams for non-enemies
             if Storage.highlight_chams[player] then
                 Storage.highlight_chams[player]:Destroy()
                 Storage.highlight_chams[player] = nil
@@ -1789,7 +2212,6 @@ function UpdateESP()
             end
         end
 
-        -- Clean up chams for players that no longer exist
         for player in pairs(Storage.highlight_chams) do
             if not validPlayers[player] or not player.Parent then
                 if Storage.highlight_chams[player] then
@@ -1820,7 +2242,9 @@ function UpdateESP()
                     Camera:WorldToViewportPoint(torso.Position)
 
                 if onscreen then
-                    local pixelDist = (Vec2(w2s.X, w2s.Y) - (ViewportSize / 2)).Magnitude
+                    local pixelDist = (
+                        Vector2.new(w2s.X, w2s.Y) - (ViewportSize / 2)
+                    ).Magnitude
 
                     if
                         ESPSettings.UseFOV
@@ -1830,12 +2254,10 @@ function UpdateESP()
                         cache.tracer_line.Visible = false
                         cache.distance_label.Visible = false
 
-                        -- Hide chams when outside FOV
                         if Storage.highlight_chams[player] then
                             Storage.highlight_chams[player].Enabled = false
                         end
                         if Storage.box_chams[player] then
-                            -- Hide all body part boxes
                             for partName, boxPart in
                                 pairs(Storage.box_chams[player].parts)
                             do
@@ -1852,7 +2274,7 @@ function UpdateESP()
                             / distance
                             * ESPSettings.Scaling.BaseScale
                             / Camera.FieldOfView
-                        local box_scale = Vec2(
+                        local box_scale = Vector2.new(
                             math.round(
                                 ESPSettings.Scaling.BoxWidthMultiplier * scale
                             ),
@@ -1860,7 +2282,7 @@ function UpdateESP()
                                 ESPSettings.Scaling.BoxHeightMultiplier * scale
                             )
                         )
-                        local box_pos = Vec2(
+                        local box_pos = Vector2.new(
                             w2s.X - box_scale.X * 0.5,
                             w2s.Y - box_scale.Y * 0.5
                         )
@@ -1881,13 +2303,13 @@ function UpdateESP()
                             cache.tracer_line.Color = ESPSettings.Tracer.Color
                             cache.tracer_line.Thickness =
                                 ESPSettings.Tracer.Thickness
-                            cache.tracer_line.From = Vec2(
+                            cache.tracer_line.From = Vector2.new(
                                 ViewportSize.X
                                     * ESPSettings.Tracer.FromPosition.X,
                                 ViewportSize.Y
                                     * ESPSettings.Tracer.FromPosition.Y
                             )
-                            cache.tracer_line.To = Vec2(w2s.X, w2s.Y)
+                            cache.tracer_line.To = Vector2.new(w2s.X, w2s.Y)
                         else
                             cache.tracer_line.Visible = false
                         end
@@ -1900,7 +2322,7 @@ function UpdateESP()
                                 ESPSettings.Distance.Size
                             cache.distance_label.Color =
                                 ESPSettings.Distance.Color
-                            cache.distance_label.Position = Vec2(
+                            cache.distance_label.Position = Vector2.new(
                                 box_pos.X + box_scale.X * 0.5,
                                 box_pos.Y - ESPSettings.Distance.Offset
                             )
@@ -1908,12 +2330,10 @@ function UpdateESP()
                             cache.distance_label.Visible = false
                         end
 
-                        -- Show chams when inside FOV
                         if Storage.highlight_chams[player] then
                             Storage.highlight_chams[player].Enabled = true
                         end
                         if Storage.box_chams[player] then
-                            -- Show all body part boxes
                             for partName, boxPart in
                                 pairs(Storage.box_chams[player].parts)
                             do
@@ -1929,12 +2349,10 @@ function UpdateESP()
                     cache.tracer_line.Visible = false
                     cache.distance_label.Visible = false
 
-                    -- Hide chams when offscreen
                     if Storage.highlight_chams[player] then
                         Storage.highlight_chams[player].Enabled = false
                     end
                     if Storage.box_chams[player] then
-                        -- Hide all body part boxes
                         for partName, boxPart in
                             pairs(Storage.box_chams[player].parts)
                         do
@@ -1968,6 +2386,51 @@ function UpdateESP()
         end
     end
 end
+
+local function UpdateAimbot()
+    if AimbotSettings.Enabled and isHoldingMouse2 then
+        local target = GetClosestTarget()
+        if target and target.Parent then
+            local targetScreenPos = Camera:WorldToViewportPoint(target.Position)
+            local center = ViewportSize / 2
+
+            local deltaX = targetScreenPos.X - center.X
+            local deltaY = targetScreenPos.Y - center.Y
+
+            if AimbotSettings.Smoothness < 1 then
+                deltaX = deltaX * AimbotSettings.Smoothness
+                deltaY = deltaY * AimbotSettings.Smoothness
+            end
+
+            mousemoverel(deltaX, deltaY)
+        end
+    elseif not isHoldingMouse2 then
+        currentTarget = nil
+    end
+end
+
+local function UpdateFOVCircle()
+    local FOV = SETTINGS.FOVCircle
+    if not FOV.Enabled then
+        FOVCircle.Visible = false
+        return
+    end
+
+    ViewportSize = Camera.ViewportSize
+    local center = ViewportSize / 2
+
+    FOVCircle.Visible = true
+    FOVCircle.Position = center
+    FOVCircle.Radius = FOV.Radius
+    FOVCircle.Color = FOV.Color
+    FOVCircle.Thickness = FOV.Thickness
+    FOVCircle.Filled = FOV.Filled
+    FOVCircle.Transparency = FOV.Transparency
+end
+
+RunService.RenderStepped:Connect(UpdateESP)
+RunService.RenderStepped:Connect(UpdateAimbot)
+RunService.RenderStepped:Connect(UpdateFOVCircle)
 
 RunService.Heartbeat:Connect(function(ndt)
     if SETTINGS.ThirdPerson.Enabled and SETTINGS.ThirdPerson.ShowCharacter then
@@ -2085,6 +2548,7 @@ RunService.Heartbeat:Connect(function(ndt)
             started = false
         end
         updateViewModelChams()
+        UpdateViewmodelOffset()
     end
 end)
 
@@ -2093,10 +2557,17 @@ RunService.Heartbeat:Connect(function()
     local isAiming = controller
         and controller:getActiveWeapon()
         and controller:getActiveWeapon()._aiming
+    local isScoped = controller
+        and controller:getActiveWeapon()
+        and controller:getActiveWeapon()._blackScoped
     local shouldHideViewmodel = SETTINGS.ThirdPerson.Enabled
         and SETTINGS.ThirdPerson.HideViewmodel
         and (SETTINGS.ThirdPerson.ShowCharacterWhileAiming or not isAiming)
     local CoreGui = game:GetService('CoreGui')
+
+    if isAiming and isScoped then
+        shouldHideViewmodel = true
+    end -- bug fixesssssssss (no but srsly if you remove this it fucks scopes up)
     if shouldHideViewmodel then
         local gunTexFolder = CoreGui:FindFirstChild('guntex')
             or Instance.new('Folder', CoreGui)
@@ -2161,62 +2632,8 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-local function UpdateAimbot()
-    if AimbotSettings.Enabled and isHoldingMouse2 then
-        local target = GetClosestTarget()
-        if target and target.Parent then
-            local targetScreenPos = Camera:WorldToViewportPoint(target.Position)
-            local center = ViewportSize / 2
-
-            local deltaX = targetScreenPos.X - center.X
-            local deltaY = targetScreenPos.Y - center.Y
-
-            if AimbotSettings.Smoothness < 1 then
-                deltaX = deltaX * AimbotSettings.Smoothness
-                deltaY = deltaY * AimbotSettings.Smoothness
-            end
-
-            mousemoverel(deltaX, deltaY)
-        end
-    elseif not isHoldingMouse2 then
-        currentTarget = nil
-    end
-end
-
 -- =============================================
--- GLOBAL FOV CIRCLE RENDERING
--- =============================================
-
-local FOVCircle = Drawing.new('Circle')
-FOVCircle.NumSides = 64
-FOVCircle.Visible = false
-FOVCircle.ZIndex = 10
-
-local function UpdateFOVCircle()
-    local FOV = SETTINGS.FOVCircle
-    if not FOV.Enabled then
-        FOVCircle.Visible = false
-        return
-    end
-
-    ViewportSize = Camera.ViewportSize
-    local center = ViewportSize / 2
-
-    FOVCircle.Visible = true
-    FOVCircle.Position = center
-    FOVCircle.Radius = FOV.Radius
-    FOVCircle.Color = FOV.Color
-    FOVCircle.Thickness = FOV.Thickness
-    FOVCircle.Filled = FOV.Filled
-    FOVCircle.Transparency = FOV.Transparency
-end
-
-RunService.RenderStepped:Connect(UpdateESP)
-RunService.RenderStepped:Connect(UpdateAimbot)
-RunService.RenderStepped:Connect(UpdateFOVCircle)
-
--- =============================================
--- UI & LIBRARY SETUP
+-- UI & LIBRARY FINAL SETUP (WATERMARK, UNLOAD, CONFIGS)
 -- =============================================
 
 Library:SetWatermarkVisibility(true)
