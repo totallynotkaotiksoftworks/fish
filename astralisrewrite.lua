@@ -16,7 +16,7 @@ local SETTINGS = {
 
     FOVCircle = {
         Enabled = false,
-        Color = Color3.fromRGB(255, 255, 255),
+        Color = Color3.fromRGB(127, 0, 255),
         Thickness = 1,
         Radius = 150,
         Filled = false,
@@ -26,19 +26,19 @@ local SETTINGS = {
     ESP = {
         Box = {
             Enabled = false,
-            Color = Color3.fromRGB(255, 255, 255),
+            Color = Color3.fromRGB(127, 0, 255),
             Thickness = 1,
             Filled = false,
         },
         Tracer = {
             Enabled = false,
-            Color = Color3.fromRGB(255, 255, 255),
+            Color = Color3.fromRGB(127, 0, 255),
             Thickness = 1,
             FromPosition = Vector2.new(0.5, 1),
         },
         Distance = {
             Enabled = false,
-            Color = Color3.fromRGB(255, 255, 255),
+            Color = Color3.fromRGB(127, 0, 255),
             Size = 14,
             CenterText = true,
             Outline = true,
@@ -1549,7 +1549,7 @@ local function updateViewModelChams()
                 Storage.ViewmodelProperties[part] = {
                     Transparency = part.Transparency,
                     Material = part.Material or Enum.Material.SmoothPlastic,
-                    Color = part.Color or Color3.fromRGB(255, 255, 255),
+                    Color = part.Color or Color3.fromRGB(127, 0, 255),
                     Blacklisted = part.Transparency > 0.9,
                     Textures = {},
                 }
@@ -1574,7 +1574,7 @@ local function updateViewModelChams()
                 Storage.ViewmodelProperties[part] = {
                     Transparency = part.Transparency,
                     Material = part.Material or Enum.Material.SmoothPlastic,
-                    Color = part.Color or Color3.fromRGB(255, 255, 255),
+                    Color = part.Color or Color3.fromRGB(127, 0, 255),
                     Blacklisted = part.Transparency > 0.9,
                     Textures = {},
                 }
